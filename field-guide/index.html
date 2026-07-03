@@ -66,7 +66,12 @@ Hardware</div>
   <p>Your text is broken into tokens → sent to the model → the model predicts the next token, then the next, then the next → tokens are streamed back and decoded into readable text. All of this happens locally, on the hardware in the room with you.</p>
 
   <h2>Chapter 7 — Hardware: CPU, GPU, RAM, and SSD</h2>
-  <p>CPU and GPU (or NPU) do the math; RAM holds the model while it's running; SSD stores the model files between runs. More RAM and a stronger GPU/NPU let you run bigger, smarter models at usable speed. See <a href="../hardware/index.html">Hardware</a> for what the lab is actually running on.</p>
+  <p>CPU and GPU (or NPU) do the math; RAM holds the model while it's running; SSD stores the model files between runs. More RAM and a stronger GPU/NPU let you run bigger, smarter models at usable speed.</p>
+  <figure>
+    <img src="../images/box-specs.png" alt="Spec comparison: GMKtec M7 Ultra vs Beelink SER9">
+    <figcaption>The lab's two nodes, spec for spec — GMKtec M7 Ultra (Max) vs. Beelink SER9 (Tony)</figcaption>
+  </figure>
+  <p>See <a href="../hardware/index.html">Hardware</a> for the full breakdown of what the lab is actually running on.</p>
 
   <h2>Chapter 8 — Model Size and Quantization</h2>
   <p>Models are described by parameter count (like "14B" = 14 billion parameters) — roughly, bigger means smarter but slower and hungrier for RAM. Quantization shrinks a model's memory footprint (e.g. 4-bit) at a small cost to precision, making larger models usable on modest hardware.</p>
@@ -75,7 +80,17 @@ Hardware</div>
   <p>Agents sit a layer above plain chat — they can read and write files, run commands, and carry out multi-step tasks rather than just answering questions. Claude Code is the agent building and documenting this very lab.</p>
 
   <h2>Chapter 10 — How Tony's AI Lab Fits Together</h2>
-  <p>Put it all together and you get the lab's actual setup — see the full picture on the <a href="../architecture/index.html">Architecture</a> page.</p>
+  <p>Put it all together and you get the lab's actual setup: two boxes, two operators, connected over the internet.</p>
+  <figure>
+    <img src="../images/ai-lab-basic-box.png" alt="Diagram of Lab PC 1 (Max, Linux, Ollama) and Lab PC 2 (Tony, Windows 11, Ollama for Windows) connected over the internet">
+    <figcaption>The basic box diagram — Lab PC 1 (Max, Linux + Ollama) and Lab PC 2 (Tony, Windows 11 + Ollama)</figcaption>
+  </figure>
+  <p>The interim target adds each operator's everyday computer into the picture too, so the lab can eventually be reached from more than just the dedicated mini PCs:</p>
+  <figure>
+    <img src="../images/Interim-target-boxes.png" alt="Interim target diagram adding Max's Laptop and Tony's HP Desktop connecting over the internet to the two Lab PCs">
+    <figcaption>Interim target — Max's Laptop and Tony's HP Desktop joining the mesh alongside the two Lab PCs</figcaption>
+  </figure>
+  <p>See the full write-up on the <a href="../architecture/index.html">Architecture</a> page.</p>
 
 </div>
 

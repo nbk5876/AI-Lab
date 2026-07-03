@@ -30,36 +30,44 @@
   <h2>Node A — Beelink SER9 (Tony)</h2>
   <table class="spec-table">
     <tr><th>CPU</th><td>AMD Ryzen AI 9 HX 370</td></tr>
+    <tr><th>CPU Architecture</th><td>Zen 5</td></tr>
+    <tr><th>Cores / Threads</th><td>12 / 24</td></tr>
+    <tr><th>Max Clock</th><td>5.1 GHz</td></tr>
     <tr><th>RAM</th><td>32 GB LPDDR5X</td></tr>
-    <tr><th>GPU</th><td>Radeon 890M integrated graphics</td></tr>
-    <tr><th>NPU</th><td>~50 TOPS AI NPU</td></tr>
-    <tr><th>Storage</th><td>1 TB SSD</td></tr>
+    <tr><th>SSD</th><td>1 TB PCIe 4</td></tr>
+    <tr><th>Integrated GPU</th><td>Radeon 890M</td></tr>
+    <tr><th>AI NPU</th><td>Yes (~50 TOPS)</td></tr>
+    <tr><th>USB4</th><td>Yes</td></tr>
+    <tr><th>Wi-Fi</th><td>Wi-Fi 6</td></tr>
     <tr><th>OS</th><td>Windows 11</td></tr>
     <tr><th>Network</th><td>Tailscale node <code>ai-lab-b</code> (100.80.190.11)</td></tr>
   </table>
   <p>No discrete GPU — the Radeon 890M integrated graphics plus the onboard NPU are what's available for acceleration. Comfortable running 7B–9B models; 13B–14B models like Qwen2.5-Coder run fine at 4-bit quantization but slower; 30B+ would load but crawl without a dGPU to offload to.</p>
 
-  <h2>Node B — GMKtec mini PC (Max)</h2>
+  <h2>Node B — GMKtec M7 Ultra (Max)</h2>
   <table class="spec-table">
+    <tr><th>CPU</th><td>AMD Ryzen 7 Pro 6850U</td></tr>
+    <tr><th>CPU Architecture</th><td>Zen 3+</td></tr>
+    <tr><th>Cores / Threads</th><td>8 / 16</td></tr>
+    <tr><th>Max Clock</th><td>4.7 GHz</td></tr>
+    <tr><th>RAM</th><td>32 GB DDR5</td></tr>
+    <tr><th>SSD</th><td>1 TB PCIe 4</td></tr>
+    <tr><th>Integrated GPU</th><td>Radeon 680M</td></tr>
+    <tr><th>AI NPU</th><td>None</td></tr>
+    <tr><th>USB4</th><td>Yes</td></tr>
+    <tr><th>Wi-Fi</th><td>Wi-Fi 6</td></tr>
     <tr><th>OS</th><td>Linux</td></tr>
     <tr><th>Runtime</th><td>Ollama</td></tr>
     <tr><th>Network</th><td>reachable at 10.0.0.75:11434 on Max's LAN</td></tr>
   </table>
-  <p>Full spec sheet TBD — updated as more detail comes in from Max.</p>
+  <p>No AI NPU on this board, so model acceleration relies on the CPU and the Radeon 680M integrated graphics.</p>
 
   <h2>From the build</h2>
   <figure>
-    <img src="../images/ai-lab-basic-box.png" alt="Basic AI Lab box diagram">
-    <figcaption>The basic AI Lab box concept</figcaption>
+    <img src="../images/box-specs.png" alt="Spec comparison: GMKtec M7 Ultra vs Beelink SER9">
+    <figcaption>The source spec sheet for the tables above</figcaption>
   </figure>
-  <figure>
-    <img src="../images/Interim-target-boxes.png" alt="Interim target boxes diagram">
-    <figcaption>Interim target boxes for the lab build-out</figcaption>
-  </figure>
-  <figure>
-    <img src="../images/box-specs.png" alt="Box specifications">
-    <figcaption>Box specifications reference</figcaption>
-  </figure>
+  <p>For the network diagrams showing how these two boxes connect, see the <a href="../field-guide/index.html">Local LLM Field Guide</a>, Chapter 10.</p>
 
 </div>
 
