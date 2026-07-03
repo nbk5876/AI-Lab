@@ -190,6 +190,7 @@ ul, ol { margin: 0 0 12px 22px; }
 }
 figure { margin: 0 0 16px; }
 figure img { max-width: 100%; border-radius: 4px; border: 1px solid var(--border); display: block; }
+figure.img-60 img { max-width: 60%; margin: 0 auto; }
 figcaption {
   font-family: Arial, sans-serif;
   font-size: 0.8rem;
