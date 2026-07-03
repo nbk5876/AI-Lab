@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware — AI Lab Portal</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Hardware</h1>
+  <div class="subtitle">What's actually running the lab</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <h2>Node A — Beelink SER9 (Tony)</h2>
+  <table class="spec-table">
+    <tr><th>CPU</th><td>AMD Ryzen AI 9 HX 370</td></tr>
+    <tr><th>RAM</th><td>32 GB LPDDR5X</td></tr>
+    <tr><th>GPU</th><td>Radeon 890M integrated graphics</td></tr>
+    <tr><th>NPU</th><td>~50 TOPS AI NPU</td></tr>
+    <tr><th>Storage</th><td>1 TB SSD</td></tr>
+    <tr><th>OS</th><td>Windows 11</td></tr>
+    <tr><th>Network</th><td>Tailscale node <code>ai-lab-b</code> (100.80.190.11)</td></tr>
+  </table>
+  <p>No discrete GPU — the Radeon 890M integrated graphics plus the onboard NPU are what's available for acceleration. Comfortable running 7B–9B models; 13B–14B models like Qwen2.5-Coder run fine at 4-bit quantization but slower; 30B+ would load but crawl without a dGPU to offload to.</p>
+
+  <h2>Node B — GMKtec mini PC (Max)</h2>
+  <table class="spec-table">
+    <tr><th>OS</th><td>Linux</td></tr>
+    <tr><th>Runtime</th><td>Ollama</td></tr>
+    <tr><th>Network</th><td>reachable at 10.0.0.75:11434 on Max's LAN</td></tr>
+  </table>
+  <p>Full spec sheet TBD — updated as more detail comes in from Max.</p>
+
+  <h2>From the build</h2>
+  <figure>
+    <img src="../images/ai-lab-basic-box.png" alt="Basic AI Lab box diagram">
+    <figcaption>The basic AI Lab box concept</figcaption>
+  </figure>
+  <figure>
+    <img src="../images/Interim-target-boxes.png" alt="Interim target boxes diagram">
+    <figcaption>Interim target boxes for the lab build-out</figcaption>
+  </figure>
+  <figure>
+    <img src="../images/box-specs.png" alt="Box specifications">
+    <figcaption>Box specifications reference</figcaption>
+  </figure>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal — a Tony &amp; Max project · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

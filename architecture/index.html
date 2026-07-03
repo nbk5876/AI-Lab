@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture — AI Lab Portal</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Architecture</h1>
+  <div class="subtitle">How Tony's AI Lab fits together</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p>The AI Lab isn't one machine — it's two nodes, run by two people, tied together over a private mesh network so both sides can see and (eventually) share what the other is running.</p>
+
+  <div class="diagram">   NODE A (Tony)                    NODE B (Max)
+  Beelink SER9                     GMKtec mini PC
+  Windows 11                       Linux
+  Ollama + Open WebUI              Ollama
+  Qwen2.5-Coder:14B                "Gwen" model
+        │                                │
+        └──────────── Tailscale ─────────┘
+             private mesh network
+             (ai-lab-b: 100.80.190.11)</div>
+
+  <h2>Node A — Tony's Beelink SER9</h2>
+  <p>The first node to come online (July 2, 2026 — see <a href="../build-journal/001-the-beelink-awakens.html">Build Journal #001</a>). Runs Windows 11, with Ollama serving models locally and Open WebUI as the browser front end. Joined the Tailscale mesh as <code>ai-lab-b</code>.</p>
+
+  <h2>Node B — Max's GMKtec</h2>
+  <p>Running Linux with Ollama serving a model Max calls "Gwen." Max also built a lightweight custom chat UI ("GwenUI") for it, with a small Vercel serverless proxy reshaping Ollama's API responses.</p>
+
+  <h2>The Tailscale layer</h2>
+  <p>Tailscale gives both nodes private IP addresses on a shared mesh network (a "tailnet"), so they can reach each other securely without exposing anything to the public internet. This is what will eventually let Tony's Claude Code session, or Open WebUI, talk to a model running on Max's machine — and vice versa.</p>
+
+  <div class="lessons">
+    <h3>Lesson learned</h3>
+    Two machines on two different home networks can't see each other by IP address alone — that's exactly what Tailscale solves. Getting both nodes onto the same tailnet (rather than relying on port-forwarding or direct SSH across networks) is the current cross-node connectivity milestone.
+  </div>
+
+  <h2>Where Claude Code fits</h2>
+  <p>Claude Code acts as the engineering assistant for the lab itself — installing software, writing documentation, building this very site, and keeping the <a href="../build-journal/index.html">Build Journal</a> and Engineering Notebook up to date as the lab grows.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal — a Tony &amp; Max project · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineering Notebook — AI Lab Portal</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Engineering Notebook</h1>
+  <div class="subtitle">Technical notes, gotchas, and observations</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p>Shorter and more technical than the Build Journal — this is where specific observations, gotchas, and "huh, interesting" moments get logged as they happen.</p>
+
+  <div class="note">
+    <h3>Note 001 — Ollama on AMD Ryzen AI Platform</h3>
+    <p>During installation, Ollama copied AMD ROCm/HIP libraries including:</p>
+    <p><code>...Ollama\lib\ollama\rocm_v7_1\ggml-hip.dll</code></p>
+    <p><strong>Observation:</strong> No separate AMD ROCm install was required — Ollama bundles what it needs for the Ryzen AI platform.</p>
+  </div>
+
+  <div class="note">
+    <h3>Note 002 — Ollama Launch UI</h3>
+    <p>Ollama displayed a Launch page with agent integrations such as Claude Code, Codex App, Hermes Agent, OpenClaw, and OpenCode.</p>
+  </div>
+
+  <div class="note">
+    <h3>Note 003 — Ollama Install Footprint</h3>
+    <p>Ollama consumed about 5 GB of disk before any models were downloaded.</p>
+  </div>
+
+  <div class="note">
+    <h3>Note 004 — Model Downloads Use Layers</h3>
+    <p>Ollama downloads models in layers, similar to how container images work.</p>
+  </div>
+
+  <div class="note">
+    <h3>Note 005 — Qwen2.5-Coder Behavior</h3>
+    <p>Qwen2.5-Coder:14B is a coding-oriented model. In Open WebUI, it attempted to emit JSON-style tool calls in response to simple conversational questions. This appears to be expected model behavior, not a broken installation.</p>
+    <div class="lessons">
+      <h3>Important lesson</h3>
+      Coder models are not necessarily ideal as everyday chatbots — they're tuned for code and tool-use patterns, which can leak into casual conversation.
+    </div>
+  </div>
+
+  <div class="note">
+    <h3>Note 006 — Need a Conversational Model</h3>
+    <p>Next step: install a general conversational model, likely <code>qwen3:8b</code> or <code>qwen3:14b</code>, for everyday use in Open WebUI — see <a href="../models/index.html">Models</a> for the plan.</p>
+  </div>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal — a Tony &amp; Max project · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

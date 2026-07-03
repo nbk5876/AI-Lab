@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local LLM Field Guide — AI Lab Portal</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Local LLM Field Guide</h1>
+  <div class="subtitle">A visual guide to understanding how local AI systems work</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p>This guide exists because "just run a local LLM" hides a surprising number of moving parts. Each chapter below breaks one piece down — diagram first, plain-English explanation second.</p>
+
+  <h2>Chapter 1 — The Local AI Stack</h2>
+  <div class="diagram">User
+  ↓
+Open WebUI
+  ↓
+Ollama
+  ↓
+LLM
+  ↓
+Hardware</div>
+  <p>Five layers, each depending on the one below it. A request from a person travels down through a front end, a model manager, the model itself, and finally the physical hardware doing the math.</p>
+
+  <h2>Chapter 2 — Open WebUI: The Front End</h2>
+  <p>A browser-based chat interface. It doesn't run any AI itself — it sends your messages to Ollama and displays what comes back, styled like a familiar chat app.</p>
+
+  <h2>Chapter 3 — Ollama: The Model Manager and Server</h2>
+  <p>Ollama downloads models (in layers — see <a href="../engineering-notebook/index.html">Engineering Notebook, Note 004</a>), keeps them on disk, loads them into memory on demand, and exposes a local API that front ends like Open WebUI (or Claude Code, or a custom script) can talk to.</p>
+
+  <div class="diagram">          Open WebUI
+               │
+               ▼
+            Ollama
+         ╱     │     ╲
+        ╱      │      ╲
+  Qwen Coder  Qwen Chat  DeepSeek   ...also Gemma, Llama</div>
+  <p>One Ollama instance can manage several models at once, swapping them in and out of memory as different tasks call for them.</p>
+
+  <h2>Chapter 4 — What Is an LLM?</h2>
+  <p>A Large Language Model is a neural network trained on huge amounts of text to predict, one piece at a time, what comes next. Ask it a question and it's generating its answer token by token, guided by everything it learned during training.</p>
+
+  <h2>Chapter 5 — Coder Models vs. Conversational Models</h2>
+  <p>Not all LLMs are trained for the same job. Coder models (like Qwen2.5-Coder) are tuned for writing and reasoning about code, and may lean toward structured, tool-call-style output even in casual chat (see <a href="../engineering-notebook/index.html">Note 005</a>). Conversational models are tuned for natural back-and-forth dialogue instead.</p>
+
+  <h2>Chapter 6 — The Life of a Prompt</h2>
+  <p>Your text is broken into tokens → sent to the model → the model predicts the next token, then the next, then the next → tokens are streamed back and decoded into readable text. All of this happens locally, on the hardware in the room with you.</p>
+
+  <h2>Chapter 7 — Hardware: CPU, GPU, RAM, and SSD</h2>
+  <p>CPU and GPU (or NPU) do the math; RAM holds the model while it's running; SSD stores the model files between runs. More RAM and a stronger GPU/NPU let you run bigger, smarter models at usable speed. See <a href="../hardware/index.html">Hardware</a> for what the lab is actually running on.</p>
+
+  <h2>Chapter 8 — Model Size and Quantization</h2>
+  <p>Models are described by parameter count (like "14B" = 14 billion parameters) — roughly, bigger means smarter but slower and hungrier for RAM. Quantization shrinks a model's memory footprint (e.g. 4-bit) at a small cost to precision, making larger models usable on modest hardware.</p>
+
+  <h2>Chapter 9 — Agents: Claude Code, Codex, and OpenCode</h2>
+  <p>Agents sit a layer above plain chat — they can read and write files, run commands, and carry out multi-step tasks rather than just answering questions. Claude Code is the agent building and documenting this very lab.</p>
+
+  <h2>Chapter 10 — How Tony's AI Lab Fits Together</h2>
+  <p>Put it all together and you get the lab's actual setup — see the full picture on the <a href="../architecture/index.html">Architecture</a> page.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal — a Tony &amp; Max project · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

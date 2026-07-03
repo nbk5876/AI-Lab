@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Journal #001 — The Beelink Awakens — AI Lab Portal</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Build Journal #001 — The Beelink Awakens</h1>
+  <div class="subtitle">July 2, 2026</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Back to Build Journal</a></p>
+
+  <p>Today, Tony's Beelink SER9 became the first working node of the AI Lab. Here's everything that happened, in order.</p>
+
+  <h2>Hardware</h2>
+  <table class="spec-table">
+    <tr><th>Machine</th><td>Beelink SER9</td></tr>
+    <tr><th>CPU</th><td>AMD Ryzen AI 9 HX 370</td></tr>
+    <tr><th>RAM</th><td>32 GB LPDDR5X</td></tr>
+    <tr><th>GPU</th><td>Radeon 890M integrated graphics</td></tr>
+    <tr><th>NPU</th><td>~50 TOPS AI NPU</td></tr>
+    <tr><th>Storage</th><td>1 TB SSD</td></tr>
+  </table>
+
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">Ollama installer downloaded</div></div>
+
+  <h2>Setup completed</h2>
+  <ul>
+    <li>Windows configured</li>
+    <li>4-digit Windows Hello PIN configured</li>
+    <li>Windows Update checked</li>
+    <li>Optional Windows Preview update skipped</li>
+    <li>OneDrive sync restored</li>
+    <li>Windows Terminal font enlarged</li>
+    <li>Ollama installed</li>
+    <li>Qwen2.5-Coder:14B downloaded</li>
+    <li>First successful local inference completed</li>
+    <li>Tailscale installed</li>
+    <li>Device joined Tailscale as <code>ai-lab-b</code></li>
+    <li>Tailscale IP observed: <code>100.80.190.11</code></li>
+    <li>Open WebUI installed</li>
+    <li>Open WebUI automatically detected Ollama and qwen2.5-coder:14b</li>
+  </ul>
+
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">Ollama installation in progress</div></div>
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">AMD ROCm/HIP library observed</div></div>
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">Ollama version verified</div></div>
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">Qwen2.5-Coder downloaded</div></div>
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">First local Qwen response</div></div>
+
+  <h2>Storage measurements</h2>
+  <table class="spec-table">
+    <tr><th>Before Ollama</th><td>867 GB free / 930 GB total</td></tr>
+    <tr><th>After Ollama</th><td>862 GB free</td></tr>
+    <tr><th>After Qwen2.5-Coder:14B</th><td>853 GB free</td></tr>
+    <tr><th>After Open WebUI + deps</th><td>847 GB free</td></tr>
+  </table>
+
+  <h3>Approximate usage</h3>
+  <ul>
+    <li>Ollama platform: ~5 GB</li>
+    <li>Qwen2.5-Coder:14B: ~9 GB</li>
+    <li>Open WebUI and dependencies: ~6 GB</li>
+  </ul>
+
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">Tailscale device ai-lab-b connected</div></div>
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">Open WebUI detected qwen2.5-coder:14b</div></div>
+  <div class="img-placeholder">📷 Photo coming soon<div class="caption">Open WebUI chat interface</div></div>
+
+  <div class="quote-box">
+    <h3>Quote of the day</h3>
+    "We're on a mission from Allah."
+    <p style="margin-top:8px; font-style: normal; font-size: 0.85rem;">(A joking Blues Brothers-style moment — not to be taken any more seriously than the movie was.)</p>
+  </div>
+
+  <div class="lessons">
+    <h3>Lessons learned</h3>
+    No separate AMD ROCm install was needed — Ollama brought its own ROCm/HIP libraries for the Ryzen AI platform. See <a href="../engineering-notebook/index.html">Engineering Notebook, Note 001</a> for detail.
+  </div>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal — a Tony &amp; Max project · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Models — AI Lab Portal</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Models</h1>
+  <div class="subtitle">Which local LLMs we've tried, and what they're good for</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <table class="spec-table">
+    <tr><th>Model</th><th>Size</th><th>Role</th><th>Status</th></tr>
+    <tr><td>Qwen2.5-Coder</td><td>14B</td><td>Coding-oriented</td><td>Running on Node A</td></tr>
+    <tr><td>Qwen3</td><td>8B / 14B</td><td>General conversational</td><td>Planned next</td></tr>
+    <tr><td>"Gwen"</td><td>—</td><td>General chat</td><td>Running on Node B (Max)</td></tr>
+  </table>
+
+  <h2>Qwen2.5-Coder:14B</h2>
+  <p>The first model installed on the lab's first node. A coding-oriented model — strong at writing and reasoning about code, but it noticeably leans toward structured, tool-call-style output even for casual questions in Open WebUI (see <a href="../engineering-notebook/index.html">Engineering Notebook, Note 005</a>).</p>
+  <div class="lessons">
+    <h3>Lesson learned</h3>
+    Coder models aren't automatically good everyday chatbots. Different jobs call for differently-tuned models.
+  </div>
+
+  <h2>Next up: a conversational model</h2>
+  <p>To get a more natural chat experience in Open WebUI, the plan is to pull down <code>qwen3:8b</code> or <code>qwen3:14b</code> — both general-purpose conversational models, sized to run comfortably on the Beelink's 32 GB of RAM.</p>
+
+  <h2>Choosing a model size</h2>
+  <p>Rough guidance for hardware like the Beelink SER9 (32 GB RAM, no discrete GPU):</p>
+  <ul>
+    <li><strong>7B–9B</strong> — comfortable (e.g. Llama 3.1 8B, Mistral 7B, Gemma 2 9B)</li>
+    <li><strong>13B–14B</strong> — feasible with 4-bit quantization, but slower</li>
+    <li><strong>30B+</strong> — will load, but crawls without a GPU to offload to</li>
+  </ul>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal — a Tony &amp; Max project · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
