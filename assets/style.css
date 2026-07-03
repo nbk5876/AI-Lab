@@ -198,6 +198,14 @@ figcaption {
   margin-top: 6px;
   text-align: center;
 }
+.img-comment {
+  font-size: 0.92rem;
+  color: #444;
+  font-style: italic;
+  border-left: 3px solid var(--blue-light);
+  padding: 4px 0 4px 14px;
+  margin: -8px 0 20px;
+}
 
 /* Timeline (build journal entries) */
 .timeline-entry {
