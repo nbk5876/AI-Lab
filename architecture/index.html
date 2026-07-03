@@ -10,7 +10,7 @@
 
 <header class="page-header">
   <h1>Architecture</h1>
-  <div class="subtitle">How Tony's AI Lab fits together</div>
+  <div class="subtitle">How the AI Lab fits together</div>
 </header>
 
 <nav class="site-nav"><ul>
@@ -29,7 +29,7 @@
 
   <p>The AI Lab isn't one machine — it's two nodes, run by two people, tied together over a private mesh network so both sides can see and (eventually) share what the other is running.</p>
 
-  <div class="diagram">   NODE A (Tony)                    NODE B (Max)
+  <div class="diagram">        NODE A                            NODE B
   Beelink SER9                     GMKtec mini PC
   Windows 11                       Linux
   Ollama + Open WebUI              Ollama
@@ -39,14 +39,14 @@
              private mesh network
              (ai-lab-b: 100.80.190.11)</div>
 
-  <h2>Node A — Tony's Beelink SER9</h2>
+  <h2>Node A — Beelink SER9</h2>
   <p>The first node to come online (July 2, 2026 — see <a href="../build-journal/001-the-beelink-awakens.html">Build Journal #001</a>). Runs Windows 11, with Ollama serving models locally and Open WebUI as the browser front end. Joined the Tailscale mesh as <code>ai-lab-b</code>.</p>
 
-  <h2>Node B — Max's GMKtec</h2>
-  <p>Running Linux with Ollama serving a model Max calls "Gwen." Max also built a lightweight custom chat UI ("GwenUI") for it, with a small Vercel serverless proxy reshaping Ollama's API responses.</p>
+  <h2>Node B — GMKtec</h2>
+  <p>Running Linux with Ollama serving a model nicknamed "Gwen." A lightweight custom chat UI ("GwenUI") was also built for it, with a small Vercel serverless proxy reshaping Ollama's API responses.</p>
 
   <h2>The Tailscale layer</h2>
-  <p>Tailscale gives both nodes private IP addresses on a shared mesh network (a "tailnet"), so they can reach each other securely without exposing anything to the public internet. This is what will eventually let Tony's Claude Code session, or Open WebUI, talk to a model running on Max's machine — and vice versa.</p>
+  <p>Tailscale gives both nodes private IP addresses on a shared mesh network (a "tailnet"), so they can reach each other securely without exposing anything to the public internet. This is what will eventually let a Claude Code session, or Open WebUI, on one node talk to a model running on the other — and vice versa.</p>
 
   <div class="lessons">
     <h3>Lesson learned</h3>
@@ -58,7 +58,7 @@
 
 </div>
 
-<footer class="site-footer">AI Lab Portal — a Tony &amp; Max project · core3.com/AI-Lab/</footer>
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
 
 </body>
 </html>
