@@ -144,6 +144,38 @@ ul, ol { margin: 0 0 12px 22px; }
   color: var(--blue-mid);
 }
 
+/* Field Guide chapter TOC + permalinks */
+.field-guide-toc {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 20px 14px;
+  margin: 16px 0 24px;
+}
+.field-guide-toc h3 {
+  font-family: Arial, sans-serif;
+  color: var(--blue-dark);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 14px 0 8px;
+}
+.field-guide-toc ol {
+  margin: 0 0 0 20px;
+  columns: 2;
+  column-gap: 24px;
+}
+.field-guide-toc li { margin-bottom: 4px; break-inside: avoid; font-size: 0.92rem; }
+h2.chapter .anchor-link {
+  margin-left: 6px;
+  font-size: 0.75em;
+  font-weight: normal;
+  color: var(--blue-mid);
+  text-decoration: none;
+  opacity: 0.4;
+}
+h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
+
 /* Diagram box */
 .diagram {
   background: var(--white);
