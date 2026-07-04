@@ -176,6 +176,40 @@ h2.chapter .anchor-link {
 }
 h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
 
+/* Field Guide roadmap panel */
+.roadmap-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--green);
+  border-radius: 4px;
+  padding: 8px 20px 16px;
+  margin: 16px 0 24px;
+}
+.roadmap-panel h3 {
+  font-family: Arial, sans-serif;
+  color: var(--blue-dark);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 14px 0 10px;
+}
+.roadmap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px 16px;
+}
+.roadmap-list li {
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+}
+.roadmap-list li.done { color: var(--text, #222); }
+.roadmap-list li.done::before { content: "✅ "; }
+.roadmap-list li.todo { color: var(--muted); }
+.roadmap-list li.todo::before { content: "⬜ "; }
+
 /* Diagram box */
 .diagram {
   background: var(--white);
