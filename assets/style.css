@@ -210,6 +210,42 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
 .roadmap-list li.todo { color: var(--muted); }
 .roadmap-list li.todo::before { content: "⬜ "; }
 
+/* Code / log block */
+.code-block {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 12px 0;
+  color: #222;
+}
+
+/* Status banners */
+.status-banner {
+  border-radius: 4px;
+  padding: 12px 18px;
+  margin: 16px 0;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
+}
+.status-success {
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-left: 5px solid var(--green);
+  color: var(--green);
+}
+.status-pending {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-left: 5px solid var(--amber);
+  color: var(--amber);
+}
+
 /* Diagram box */
 .diagram {
   background: var(--white);

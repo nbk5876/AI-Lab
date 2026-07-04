@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local LLM Field Guide — Part 2 — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Local LLM Field Guide — Part 2</h1>
+  <div class="subtitle">Mobile LAN Access</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Part 1: Local LLM Setup</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <p>Part 1 established the local AI environment on Node A (Beelink SER9). Part 2 extends that environment to other devices on the local network.</p>
+
+  <p>This guide documents how Open WebUI was made accessible from an iPhone connected to the same Wi-Fi network as Node A, on July 4, 2026.</p>
+
+  <div class="lessons">
+    <h3>Scope</h3>
+    Local network access only. Remote access over cellular/Tailscale has not yet been implemented or tested.
+  </div>
+
+  <h2 id="mobile-1" class="chapter">Goal <a class="anchor-link" href="#mobile-1" aria-label="Link to this section">#</a></h2>
+  <p>Allow an iPhone connected to the condo Wi-Fi network to use Open WebUI running on Node A.</p>
+  <div class="diagram">iPhone
+  │
+  │ Wi-Fi
+  ▼
+Condo LAN
+192.168.88.0/24
+  │
+  ▼
+Node A (AI-LAB-B)
+192.168.88.239
+  │
+  ▼
+Open WebUI
+TCP 8080</div>
+
+  <h2 id="mobile-2" class="chapter">Baseline Configuration <a class="anchor-link" href="#mobile-2" aria-label="Link to this section">#</a></h2>
+  <table class="spec-table">
+    <tr><th>Hardware</th><td>Beelink SER9</td></tr>
+    <tr><th>Operating System</th><td>Windows 11</td></tr>
+    <tr><th>Active Network Interface</th><td>Wi-Fi 2</td></tr>
+    <tr><th>LAN Address</th><td>192.168.88.239</td></tr>
+    <tr><th>Subnet Mask</th><td>255.255.255.0</td></tr>
+    <tr><th>Default Gateway</th><td>192.168.88.1</td></tr>
+    <tr><th>Tailscale Address</th><td>100.80.190.11</td></tr>
+    <tr><th>iPhone LAN Address (during testing)</th><td>192.168.88.240</td></tr>
+  </table>
+  <figure class="img-60">
+    <img src="../images/hostname-ai-lab-b.jpg" alt="PowerShell showing hostname command returning AI-LAB-B">
+    <figcaption>Confirming the hostname</figcaption>
+  </figure>
+  <figure class="img-60">
+    <img src="../images/ipconfig-tailscale-wifi.jpg" alt="ipconfig output showing the Tailscale adapter and Wi-Fi 2 with address 192.168.88.239">
+    <figcaption>ipconfig — Tailscale adapter (100.80.190.11) and Wi-Fi 2 (192.168.88.239) side by side</figcaption>
+  </figure>
+  <p>Tailscale was already present on the node, but cellular/Tailscale access was not tested during this phase — see <a href="#mobile-14">Next Phase</a>.</p>
+
+  <h2 id="mobile-3" class="chapter">Initial Open WebUI Binding <a class="anchor-link" href="#mobile-3" aria-label="Link to this section">#</a></h2>
+  <div class="code-block">LocalAddress LocalPort OwningProcess
+------------ --------- -------------
+127.0.0.1         8080         19748</div>
+  <figure class="img-60">
+    <img src="../images/listener-127-0-0-1-8080.jpg" alt="Get-NetTCPConnection output showing Open WebUI listening only on 127.0.0.1:8080">
+    <figcaption>The initial listener — loopback only</figcaption>
+  </figure>
+  <p><code>127.0.0.1</code> is the loopback interface — Open WebUI was reachable only from the node itself. Other devices on the LAN could not connect to that listener.</p>
+  <p>The owning process was identified as the Open WebUI Desktop app's bundled Python runtime:</p>
+  <figure class="img-60">
+    <img src="../images/open-webui-process-id.jpg" alt="Get-Process output identifying the python.exe process serving Open WebUI">
+    <figcaption>Identifying the process behind the listener</figcaption>
+  </figure>
+  <p>explicitly launching with:</p>
+  <div class="code-block">open-webui.exe serve --host 127.0.0.1 --port 8080</div>
+  <figure class="img-60">
+    <img src="../images/open-webui-commandline-loopback.jpg" alt="Get-CimInstance output showing the full command line with --host 127.0.0.1 --port 8080">
+    <figcaption>The full command line, confirming the loopback-only launch</figcaption>
+  </figure>
+  <p>A server bound to <code>127.0.0.1</code> only accepts connections that originate from the same machine — that's why the iPhone couldn't reach it yet.</p>
+
+  <h2 id="mobile-4" class="chapter">Required Open WebUI Binding <a class="anchor-link" href="#mobile-4" aria-label="Link to this section">#</a></h2>
+  <div class="code-block">open-webui serve --host 0.0.0.0 --port 8080</div>
+  <p><code>0.0.0.0</code> tells the server to listen on all available IPv4 interfaces, not just loopback. Clients never browse to <code>0.0.0.0</code> itself — the iPhone instead uses the node's actual LAN address:</p>
+  <div class="code-block">http://192.168.88.239:8080/</div>
+
+  <h2 id="mobile-5" class="chapter">Open WebUI Desktop Configuration Investigation <a class="anchor-link" href="#mobile-5" aria-label="Link to this section">#</a></h2>
+  <p>The Open WebUI Desktop config file included:</p>
+  <div class="code-block">"localServer": {
+  "port": 8080,
+  "serveOnLocalNetwork": false,
+  "autoUpdate": true
+}</div>
+  <figure class="img-60">
+    <img src="../images/open-webui-config-json.jpg" alt="Open WebUI Desktop config.json showing serveOnLocalNetwork set to false">
+    <figcaption>The likely culprit: <code>serveOnLocalNetwork: false</code></figcaption>
+  </figure>
+  <p>Attempts to change this setting did not produce a persistent LAN-enabled startup — the Desktop app continued launching with <code>--host 127.0.0.1</code> on its own. <strong>Persistent LAN-enabled Open WebUI startup remains unresolved.</strong> The server that worked for this session was launched manually, and the window running it has to stay open.</p>
+
+  <h2 id="mobile-6" class="chapter">Initial iPhone Failures <a class="anchor-link" href="#mobile-6" aria-label="Link to this section">#</a></h2>
+  <p>Early symptoms included several browsers attempting HTTPS instead of plain HTTP, secure-connection errors, roughly 60-second connection timeouts, an <code>Invalid HTTP request received</code> log line from Open WebUI, and later a WebSocket <code>WinError 121</code> semaphore timeout. None of this yet identified whether the real problem was Open WebUI, Windows Firewall, the Windows network profile, or browser protocol behavior.</p>
+  <figure class="img-60">
+    <img src="../images/iphone-connection-timed-out.png" alt="iPhone Safari showing 192.168.88.239 took too long to respond, ERR_CONNECTION_TIMED_OUT">
+    <figcaption>Safari: connection timed out</figcaption>
+  </figure>
+  <figure class="img-60">
+    <img src="../images/iphone-duckduckgo-timeout.jpg" alt="iPhone DuckDuckGo browser showing the request timed out">
+    <figcaption>A second browser, same result</figcaption>
+  </figure>
+  <p class="img-comment">Two different browsers, same dead end — a good early sign the problem wasn't the browser.</p>
+
+  <h2 id="mobile-7" class="chapter">Basic Network Connectivity Test <a class="anchor-link" href="#mobile-7" aria-label="Link to this section">#</a></h2>
+  <div class="code-block">ping 192.168.88.240
+
+Sent = 4, Received = 4, Lost = 0</div>
+  <p>This proved basic IP connectivity between the two devices — it did not prove that TCP port 8080, or any application port, was actually reachable.</p>
+
+  <h2 id="mobile-8" class="chapter">Python HTTP Server Diagnostic Test <a class="anchor-link" href="#mobile-8" aria-label="Link to this section">#</a></h2>
+  <p>To take Open WebUI out of the test path entirely, a plain Python HTTP server was started:</p>
+  <div class="code-block">python -m http.server 8000 --bind 0.0.0.0
+Serving HTTP on 0.0.0.0 port 8000</div>
+  <p>The iPhone still couldn't reach <code>http://192.168.88.239:8000/</code>, and no request showed up in the server console. That was actually useful: it removed Open WebUI as a suspect, confirmed the failure was at the network/firewall layer, and pointed the investigation at Windows itself.</p>
+
+  <h2 id="mobile-9" class="chapter">Windows Network Profile Discovery <a class="anchor-link" href="#mobile-9" aria-label="Link to this section">#</a></h2>
+  <div class="code-block">Get-NetConnectionProfile | Format-Table InterfaceAlias,NetworkCategory,IPv4Connectivity
+
+InterfaceAlias NetworkCategory IPv4Connectivity
+-------------- --------------- ----------------
+Tailscale       Private         LocalNetwork
+Wi-Fi 2         Public          Internet</div>
+  <p>The condo Wi-Fi interface was classified <strong>Public</strong>. Windows applies much more restrictive inbound behavior to Public networks than Private ones. Changing it:</p>
+  <div class="code-block">Set-NetConnectionProfile -InterfaceAlias "Wi-Fi 2" -NetworkCategory Private
+
+# Verified:
+Wi-Fi 2    Private    Internet</div>
+
+  <h2 id="mobile-10" class="chapter">Temporary Port 8000 Firewall Rule <a class="anchor-link" href="#mobile-10" aria-label="Link to this section">#</a></h2>
+  <div class="code-block">New-NetFirewallRule -DisplayName "AI Lab Test HTTP 8000" `
+  -Direction Inbound -Action Allow -Protocol TCP `
+  -LocalPort 8000 -Profile Private</div>
+  <p>After this rule was added, the iPhone successfully reached the Python server:</p>
+  <div class="code-block">192.168.88.240 - - [04/Jul/2026 11:32:32] "GET / HTTP/1.1" 200 -</div>
+  <p>This was the decisive network-layer validation — the LAN path itself was proven to work.</p>
+
+  <h2 id="mobile-11" class="chapter">Side Discovery: Portal Mobile Preview <a class="anchor-link" href="#mobile-11" aria-label="Link to this section">#</a></h2>
+  <p>While that temporary Python server was still running, the AI Lab Portal's own local files were browsed to from the iPhone and loaded successfully — including this Field Guide and its images. That's a useful secondary discovery: <strong>the Portal can be previewed from a mobile device on the local LAN before changes are pushed or deployed.</strong></p>
+  <p>One caution, though: the temporary server was started from the Windows user profile root, which exposed the entire directory tree beneath it to any device that could reach port 8000 — not just the Portal folder. That's not a configuration to leave running. For future mobile-preview testing, the server should be started from inside the Portal directory specifically, so only that folder is exposed. See <a href="#mobile-13">Security and Cleanup</a>.</p>
+
+  <h2 id="mobile-12" class="chapter">Open WebUI Firewall Rule <a class="anchor-link" href="#mobile-12" aria-label="Link to this section">#</a></h2>
+  <div class="code-block">New-NetFirewallRule -DisplayName "AI Lab Open WebUI 8080" `
+  -Direction Inbound -Action Allow -Protocol TCP `
+  -LocalPort 8080 -Profile Private</div>
+  <p>With the manually launched, LAN-bound Open WebUI server running:</p>
+  <div class="code-block">LocalAddress LocalPort OwningProcess
+------------ --------- -------------
+0.0.0.0           8080         12816</div>
+  <p>the iPhone browsed to <code>http://192.168.88.239:8080/</code> and Open WebUI loaded.</p>
+
+  <h2 id="mobile-13" class="chapter">Final Validation <a class="anchor-link" href="#mobile-13" aria-label="Link to this section">#</a></h2>
+  <div class="code-block">192.168.88.240:50598 - "GET / HTTP/1.1" 200
+192.168.88.240:50598 - "GET /manifest.json HTTP/1.1" 200
+192.168.88.240:50599 - "GET /static/loader.js HTTP/1.1" 200
+192.168.88.240:50600 - "GET /static/custom.css HTTP/1.1" 200</div>
+  <figure class="img-60">
+    <img src="../images/netstat-established-iphone-8080.jpg" alt="Get-NetTCPConnection output showing an Established connection on port 8080 from the iPhone's LAN address 192.168.88.240">
+    <figcaption>Established — the iPhone holding an open connection to Open WebUI on port 8080</figcaption>
+  </figure>
+  <p>No screenshot of the loaded Open WebUI chat screen itself survived the session, but this is stronger proof than a photo would be: it's the network stack itself confirming a live, established connection from the iPhone's address to the Open WebUI port.</p>
+  <div class="diagram">iPhone
+192.168.88.240
+  │
+  │ Condo Wi-Fi
+  ▼
+Node A (AI-LAB-B)
+192.168.88.239
+  │
+  │ TCP 8080
+  ▼
+Open WebUI
+0.0.0.0:8080
+  │
+  ▼
+Local LLM Models</div>
+  <div class="status-banner status-success">Mobile LAN Access: SUCCESS</div>
+
+  <h2>Lessons Learned</h2>
+  <ol>
+    <li>A server listening on <code>127.0.0.1</code> is not reachable from other LAN devices.</li>
+    <li>Binding to <code>0.0.0.0</code> allows a server to accept LAN connections, subject to firewall configuration.</li>
+    <li>A successful ping does not prove an application port is reachable.</li>
+    <li>A minimal Python HTTP server is a good way to separate application failures from network/firewall failures.</li>
+    <li>Windows' Public network profile can silently block inbound LAN access that a Private profile allows.</li>
+    <li>Explicit firewall rules give predictable inbound access.</li>
+    <li>Browser HTTPS upgrades can produce misleading errors when testing an HTTP-only service.</li>
+    <li>Verify the server is actually listening before blaming the client device.</li>
+    <li>Persistent LAN-enabled Open WebUI startup remains unresolved.</li>
+    <li>Temporary diagnostic servers and firewall rules should be removed once they're no longer needed.</li>
+  </ol>
+
+  <div class="lessons">
+    <h3>Security and Cleanup</h3>
+    <p>The temporary Python HTTP server exposed the full directory tree beneath the Windows user profile — not just the Portal folder — to any device that could reach port 8000.</p>
+    <p>Required cleanup on the node:</p>
+    <div class="code-block">Stop the temporary Python HTTP server, if still running.
+
+Remove-NetFirewallRule -DisplayName "AI Lab Test HTTP 8000"
+
+# Verify port 8000 is no longer listening:
+Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -eq 8000 }</div>
+    <p>The dedicated Open WebUI port-8080 firewall rule should be kept. For future Portal mobile-preview testing, start the server from inside the Portal folder specifically:</p>
+    <div class="code-block">Set-Location "...\AI-Lab\Portal"
+python -m http.server 8000 --bind 0.0.0.0</div>
+  </div>
+
+  <h2 id="mobile-14" class="chapter">Next Phase: Remote Access with Tailscale <a class="anchor-link" href="#mobile-14" aria-label="Link to this section">#</a></h2>
+  <div class="status-banner status-pending">Status: Deferred / Not Yet Tested</div>
+  <p>LAN access is complete. The next objective is reaching Node A from the iPhone while the phone is on cellular data, outside the condo LAN.</p>
+  <p>Known starting point: Node A's Tailscale address is <code>100.80.190.11</code>.</p>
+  <p>Future work:</p>
+  <ul>
+    <li>Verify Tailscale installation and login state on the iPhone</li>
+    <li>Verify the node and iPhone are members of the same tailnet</li>
+    <li>Turn off iPhone Wi-Fi and verify Tailscale connectivity over cellular</li>
+    <li>Test Open WebUI through the Tailscale address</li>
+    <li>Determine whether additional firewall configuration is required</li>
+    <li>Consider MagicDNS instead of a raw IP address</li>
+    <li>Document security implications</li>
+    <li>Solve persistent Open WebUI LAN-enabled startup</li>
+  </ul>
+
+  <p><a href="index.html">← Part 1: Local LLM Setup</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+  <div class="status-banner status-pending">Next: Remote Access with Tailscale — Not Yet Implemented</div>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

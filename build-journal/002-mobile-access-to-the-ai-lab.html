@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Journal #002 — Mobile Access to the AI Lab — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Build Journal #002 — Mobile Access to the AI Lab</h1>
+  <div class="subtitle">July 4, 2026</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Back to Build Journal</a></p>
+
+  <p>Today's objective was to get Open WebUI, running on Node A (Beelink SER9), reachable from an iPhone on the condo Wi-Fi. It turned into a real troubleshooting chain — the kind that's more instructive after the fact than it felt in the middle of it. Full technical detail lives in the <a href="../field-guide/mobile-lan-access.html">Field Guide, Part 2: Mobile LAN Access</a> — this entry is the narrative version of the same session.</p>
+
+  <h2>Workstation Improvement</h2>
+  <p>Small but worth noting: a USB keyboard/mouse sharing switch went in between the HP workstation and Node A, so both machines now share one keyboard and mouse. The monitor input still swaps separately between DisplayPort and HDMI. It made hopping back and forth between the two machines during this session a lot less annoying.</p>
+  <figure class="img-60">
+    <img src="../images/kvm-switch-diagram.jpg" alt="Hand-drawn diagram of a keyboard/mouse switch wired between the HP workstation and Beelink">
+    <figcaption>The wiring plan, sketched by hand</figcaption>
+  </figure>
+  <figure class="img-60">
+    <img src="../images/monitor-input-selector.jpg" alt="Monitor on-screen menu showing HDMI1, HDMI2, and DisplayPort input options">
+    <figcaption>Swapping the monitor input between the two machines</figcaption>
+  </figure>
+
+  <h2>Mobile Access Goal</h2>
+  <p>The goal: reach Open WebUI from an iPhone. Local Wi-Fi/LAN access first — cellular/Tailscale access deliberately deferred to a later session.</p>
+
+  <h2>Baseline Discovery</h2>
+  <p>Node A's LAN address: <code>192.168.88.239</code>. Open WebUI was initially listening only on <code>127.0.0.1:8080</code> — loopback only, invisible to anything else on the network.</p>
+
+  <h2>Open WebUI Investigation</h2>
+  <p>The running process and its full command line got inspected. Open WebUI Desktop was explicitly launching with <code>--host 127.0.0.1 --port 8080</code>. Attempts to change that in the Desktop app's persistent config didn't stick — the app kept relaunching loopback-only. That part stayed unresolved for the day.</p>
+
+  <h2>Manual LAN Server</h2>
+  <p>Open WebUI was launched by hand with <code>--host 0.0.0.0 --port 8080</code> instead. The iPhone still couldn't reliably load it — so binding was necessary, but not sufficient.</p>
+
+  <h2>Network Debugging</h2>
+  <p>Symptoms piled up: HTTPS connection errors, ~60-second timeouts, invalid HTTP requests, WebSocket semaphore timeouts. A plain <code>ping</code> confirmed basic IP connectivity between the two devices, but that alone didn't explain why the app port wasn't reachable.</p>
+
+  <h2>Python HTTP Server Test</h2>
+  <p>To isolate the problem, a bare-bones Python HTTP server replaced Open WebUI in the test path. The iPhone still couldn't reach it — which was actually good news, because it ruled out Open WebUI itself and pointed the investigation at Windows networking instead.</p>
+
+  <h2>Root Cause Discovery</h2>
+  <p>Windows had the condo Wi-Fi adapter classified as a <strong>Public</strong> network, which blocks inbound LAN traffic more aggressively than a Private one. Switching it to Private, then adding an explicit inbound firewall rule for the test port, got the iPhone loading the Python server's directory listing. That was the proof the LAN path itself worked.</p>
+
+  <h2>Portal Discovery</h2>
+  <p>While that temporary server was up, the AI Lab Portal loaded successfully on the iPhone straight from its local files — a nice side effect. It means the Portal can be previewed on a phone before anything gets pushed to GitHub or deployed to DreamHost. (With one caveat: that temporary server was exposing the whole user-profile directory tree, not just the Portal folder — worth remembering next time, and only meant to run from inside the Portal folder itself going forward.)</p>
+
+  <h2>Open WebUI Success</h2>
+  <p>With the network profile fixed, a dedicated firewall rule added for port 8080, and the manually launched server confirmed listening on <code>0.0.0.0:8080</code>, the iPhone loaded Open WebUI. Server logs showed clean HTTP 200 responses coming from the phone's LAN address.</p>
+
+  <h2>Session Result</h2>
+  <div class="status-banner status-success">Mobile LAN Access: COMPLETE</div>
+  <div class="status-banner status-pending">Cellular/Tailscale Access: DEFERRED</div>
+  <div class="status-banner status-pending">Persistent LAN-Enabled Open WebUI Startup: UNRESOLVED</div>
+
+  <h2>Primary Troubleshooting Lesson</h2>
+  <p>The real takeaway isn't any single fix — it's that mobile access needed every one of these layers lined up at once:</p>
+  <div class="diagram">Open WebUI process running
+         +
+Application binding to 0.0.0.0
+         +
+Windows network profile set to Private
+         +
+Windows Firewall inbound rule
+         +
+Correct HTTP browser address</div>
+  <p>Miss any one of those and it just doesn't work, with symptoms that don't obviously point back to the missing piece. That's the pattern worth remembering for next time.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
