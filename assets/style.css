@@ -246,6 +246,21 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
   color: var(--amber);
 }
 
+/* Side-by-side figure pair */
+.figure-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.figure-row figure { flex: 0 1 35%; margin: 0; }
+.figure-row figure img { max-width: 100%; }
+@media (max-width: 600px) {
+  .figure-row figure { flex-basis: 100%; }
+}
+
 /* Diagram box */
 .diagram {
   background: var(--white);

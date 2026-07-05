@@ -118,14 +118,16 @@
 
   <h2 id="mobile-6" class="chapter">Initial iPhone Failures <a class="anchor-link" href="#mobile-6" aria-label="Link to this section">#</a></h2>
   <p>Early symptoms included several browsers attempting HTTPS instead of plain HTTP, secure-connection errors, roughly 60-second connection timeouts, an <code>Invalid HTTP request received</code> log line from Open WebUI, and later a WebSocket <code>WinError 121</code> semaphore timeout. None of this yet identified whether the real problem was Open WebUI, Windows Firewall, the Windows network profile, or browser protocol behavior.</p>
-  <figure class="img-60">
-    <img src="../images/iphone-connection-timed-out.png" alt="iPhone Safari showing 192.168.88.239 took too long to respond, ERR_CONNECTION_TIMED_OUT">
-    <figcaption>Safari: connection timed out</figcaption>
-  </figure>
-  <figure class="img-60">
-    <img src="../images/iphone-duckduckgo-timeout.jpg" alt="iPhone DuckDuckGo browser showing the request timed out">
-    <figcaption>A second browser, same result</figcaption>
-  </figure>
+  <div class="figure-row">
+    <figure>
+      <img src="../images/iphone-connection-timed-out.png" alt="iPhone Safari showing 192.168.88.239 took too long to respond, ERR_CONNECTION_TIMED_OUT">
+      <figcaption>Safari: connection timed out</figcaption>
+    </figure>
+    <figure>
+      <img src="../images/iphone-duckduckgo-timeout.jpg" alt="iPhone DuckDuckGo browser showing the request timed out">
+      <figcaption>A second browser, same result</figcaption>
+    </figure>
+  </div>
   <p class="img-comment">Two different browsers, same dead end — a good early sign the problem wasn't the browser.</p>
 
   <h2 id="mobile-7" class="chapter">Basic Network Connectivity Test <a class="anchor-link" href="#mobile-7" aria-label="Link to this section">#</a></h2>
