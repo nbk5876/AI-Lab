@@ -67,15 +67,10 @@
   </div>
 
   <h2 id="chapter-1" class="chapter">Chapter 1 — The Local AI Stack <a class="anchor-link" href="#chapter-1" aria-label="Link to this chapter">#</a></h2>
-  <div class="diagram">User
-  ↓
-Open WebUI
-  ↓
-Ollama
-  ↓
-LLM
-  ↓
-Hardware</div>
+  <figure class="img-25">
+    <img src="../images/local-stack-five-layer.png" alt="Diagram of User on top of Open WebUI, on top of Ollama, on top of an LLM sphere, on top of Hardware">
+    <figcaption>Five layers, top to bottom</figcaption>
+  </figure>
   <p>Five layers, each depending on the one below it. A request from a person travels down through a front end, a model manager, the model itself, and finally the physical hardware doing the math.</p>
 
   <h2 id="chapter-2" class="chapter">Chapter 2 — Open WebUI: The Front End <a class="anchor-link" href="#chapter-2" aria-label="Link to this chapter">#</a></h2>
