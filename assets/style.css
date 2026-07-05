@@ -333,6 +333,7 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
 figure { margin: 0 0 16px; }
 figure img { max-width: 100%; border-radius: 4px; border: 1px solid var(--border); display: block; }
 figure.img-60 img { max-width: 60%; margin: 0 auto; }
+figure.img-42 img { max-width: 42%; margin: 0 auto; }
 figcaption {
   font-family: Arial, sans-serif;
   font-size: 0.8rem;
