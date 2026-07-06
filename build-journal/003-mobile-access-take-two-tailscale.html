@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Journal #003 — Mobile Access, Take Two: Tailscale — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Build Journal #003 — Mobile Access, Take Two: Tailscale</h1>
+  <div class="subtitle">July 5, 2026</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Back to Build Journal</a></p>
+
+  <p>Yesterday's entry (<a href="002-mobile-access-to-the-ai-lab.html">Build Journal #002</a>) left mobile access half-finished on purpose: LAN access worked, and cellular/Tailscale access was deliberately deferred. Today was about closing that gap — getting the iPhone to reach Open WebUI on Node A from anywhere, Wi-Fi off entirely. Full technical detail lives in the <a href="../field-guide/mobile-lan-access.html">Field Guide, Part 2</a> — this entry is the narrative version.</p>
+
+  <h2>Starting Point</h2>
+  <p>Node A already had Tailscale installed and had shown up in earlier notes with address <code>100.80.190.11</code>. That looked like a solid starting point for today's test.</p>
+
+  <h2>Wrong Tailnet</h2>
+  <p>It wasn't. Node A's Tailscale client turned out to be signed into a personal tailnet — not the shared AI Lab tailnet that Node B and the iPhone were already members of. Two devices on different tailnets simply can't see each other, no matter how correctly everything else is set up. This wasn't a bug so much as a mix-up: it's easy to sign into the wrong one when more than one tailnet is available at login.</p>
+
+  <h2>The Fix</h2>
+  <p>Node A got logged out of Tailscale and back in, this time explicitly selecting the shared AI Lab tailnet instead of the personal one:</p>
+  <div class="code-block">tailscale logout
+tailscale login</div>
+  <p>Signing in wasn't quite the finish line, either — the join request still needed to be approved by the tailnet's admin before Node A actually showed up for the other devices. Deliberate access control, not a hiccup.</p>
+
+  <h2>Confirmed on the Same Tailnet</h2>
+  <p>Once approved, <code>tailscale status</code> showed all three devices together for the first time: Node A at a new address, <code>100.115.162.13</code>; Node B at <code>100.81.51.91</code>; and the iPhone, showing up as <code>iphone171</code>, at <code>100.110.16.81</code>.</p>
+
+  <h2>Startup Automation</h2>
+  <p>Somewhere in the middle of all this, a smaller but genuinely useful improvement landed: a pair of one-click batch scripts to start and stop the whole local stack — checking whether Ollama and Open WebUI are already running, starting Ollama if not, warming up the default model, then launching Open WebUI. It doesn't survive a reboot on its own, but it turns "reconstruct the launch command from memory" into "double-click a script," which was most of the actual daily friction.</p>
+
+  <h2>Troubleshooting Detour</h2>
+  <p>Along the way, the Open WebUI Desktop app's own window occasionally threw a bare <code>Failed to fetch</code> error while the server underneath it was completely healthy — confirmed with <code>curl</code> against both <code>127.0.0.1:8080</code> and <code>localhost:8080</code>. The Desktop app's shell turned out to be less trustworthy than just using a browser, which is also exactly what the iPhone has to do anyway.</p>
+
+  <h2>The Moment It Worked</h2>
+  <p>With Wi-Fi switched off on the iPhone — cellular data only — Safari loaded:</p>
+  <div class="code-block">http://100.115.162.13:8080</div>
+  <p>Open WebUI came up, login succeeded, <code>qwen3:8b</code> got selected, and a test question — "Who invented AI?" — got a real answer back. No condo Wi-Fi involved anywhere in that path.</p>
+
+  <h2>Session Result</h2>
+  <div class="status-banner status-success">Mobile Access via Tailscale: SUCCESS</div>
+  <div class="status-banner status-success">LAN Access (from July 4): Still Working</div>
+
+  <h2>Primary Lesson</h2>
+  <p>A device can look perfectly healthy on Tailscale — connected, online, reporting an IP — and still be unreachable from another device, simply because the two aren't on the same tailnet. That's a different failure mode from anything in yesterday's LAN troubleshooting, and worth remembering as its own category of "everything looks fine, but it isn't" problem.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
