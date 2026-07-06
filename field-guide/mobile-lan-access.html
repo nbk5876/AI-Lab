@@ -15,7 +15,7 @@
 
 <header class="page-header">
   <h1>Local LLM Field Guide — Part 2</h1>
-  <div class="subtitle">Mobile LAN Access</div>
+  <div class="subtitle">Mobile Access: LAN and Tailscale</div>
 </header>
 
 <nav class="site-nav"><ul>
@@ -34,9 +34,9 @@
 
   <p><a href="index.html">← Part 1: Local LLM Setup</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
 
-  <p>Part 1 established the local AI environment on Node A (Beelink SER9). Part 2 extends that environment to other devices on the local network.</p>
+  <p>Part 1 established the local AI environment on Node A (Beelink SER9). Part 2 extends that environment to other devices — first over the local network, then from anywhere at all, using Tailscale.</p>
 
-  <p>This guide documents how Open WebUI was made accessible from an iPhone connected to the same Wi-Fi network as Node A, on July 4, 2026.</p>
+  <p>This guide documents two milestones: getting Open WebUI reachable from an iPhone on the same Wi-Fi network as Node A (July 4, 2026), and then reaching it from the iPhone over cellular data, off that network entirely, using Tailscale (July 5, 2026).</p>
 
   <figure class="img-60">
     <img src="../images/Interim-target-boxes-plus-mobile.png" alt="Diagram of Max's Laptop, Tony's HP Desktop, and a Mobile Phone connecting over the internet to Lab PC 1 (Max) and Lab PC 2 (Tony)">
@@ -45,7 +45,7 @@
 
   <div class="lessons">
     <h3>Scope</h3>
-    Local network access only. Remote access over cellular/Tailscale has not yet been implemented or tested.
+    LAN access: complete. Tailscale remote access, including over cellular data: complete.
   </div>
 
   <h2 id="mobile-1" class="chapter">Goal <a class="anchor-link" href="#mobile-1" aria-label="Link to this section">#</a></h2>
@@ -74,7 +74,15 @@
     <img src="../images/ipconfig-tailscale-wifi.jpg" alt="ipconfig output showing the Tailscale adapter and Wi-Fi 2 with address 192.168.88.239">
     <figcaption>ipconfig — Tailscale adapter (100.80.190.11) and Wi-Fi 2 (192.168.88.239) side by side</figcaption>
   </figure>
-  <p>Tailscale was already present on the node, but cellular/Tailscale access was not tested during this phase — see <a href="#mobile-14">Next Phase</a>.</p>
+  <p>Tailscale was already present on the node during this phase, but signed into the wrong identity — see <a href="#mobile-17">Tailscale Account / Tailnet Lessons</a>. Once corrected, the node's Tailscale address changed to <code>100.115.162.13</code>, used throughout the remote-access phase below.</p>
+
+  <h3>Tailscale identities (after correction)</h3>
+  <table class="spec-table">
+    <tr><th>Node A (<code>ai-lab-b</code>)</th><td>100.115.162.13</td></tr>
+    <tr><th>Node B</th><td>100.81.51.91</td></tr>
+    <tr><th>iPhone (<code>iphone171</code>)</th><td>100.110.16.81</td></tr>
+  </table>
+  <p>All three devices are members of the same shared AI Lab tailnet. Node A initially joined a different, personal tailnet by mistake — see <a href="#mobile-17">Tailscale Account / Tailnet Lessons</a>.</p>
 
   <h2 id="mobile-3" class="chapter">Initial Open WebUI Binding <a class="anchor-link" href="#mobile-3" aria-label="Link to this section">#</a></h2>
   <div class="code-block">LocalAddress LocalPort OwningProcess
@@ -214,7 +222,7 @@ Local LLM Models</div>
     <li>Explicit firewall rules give predictable inbound access.</li>
     <li>Browser HTTPS upgrades can produce misleading errors when testing an HTTP-only service.</li>
     <li>Verify the server is actually listening before blaming the client device.</li>
-    <li>Persistent LAN-enabled Open WebUI startup remains unresolved.</li>
+    <li>Persistent LAN-enabled Open WebUI startup was never fixed at the Desktop-app level, but a one-click Start/Stop script (see <a href="#mobile-14">Startup Automation</a>) makes that a non-issue in practice.</li>
     <li>Temporary diagnostic servers and firewall rules should be removed once they're no longer needed.</li>
   </ol>
 
@@ -233,24 +241,103 @@ Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -eq 8000 }</div
 python -m http.server 8000 --bind 0.0.0.0</div>
   </div>
 
-  <h2 id="mobile-14" class="chapter">Next Phase: Remote Access with Tailscale <a class="anchor-link" href="#mobile-14" aria-label="Link to this section">#</a></h2>
-  <div class="status-banner status-pending">Status: Deferred / Not Yet Tested</div>
-  <p>LAN access is complete. The next objective is reaching Node A from the iPhone while the phone is on cellular data, outside the condo LAN.</p>
-  <p>Known starting point: Node A's Tailscale address is <code>100.80.190.11</code>.</p>
-  <p>Future work:</p>
-  <ul>
-    <li>Verify Tailscale installation and login state on the iPhone</li>
-    <li>Verify the node and iPhone are members of the same tailnet</li>
-    <li>Turn off iPhone Wi-Fi and verify Tailscale connectivity over cellular</li>
-    <li>Test Open WebUI through the Tailscale address</li>
-    <li>Determine whether additional firewall configuration is required</li>
-    <li>Consider MagicDNS instead of a raw IP address</li>
-    <li>Document security implications</li>
-    <li>Solve persistent Open WebUI LAN-enabled startup</li>
-  </ul>
+  <h2 id="mobile-14" class="chapter">Startup Automation <a class="anchor-link" href="#mobile-14" aria-label="Link to this section">#</a></h2>
+  <p>The Open WebUI Desktop app never reliably picked up a LAN-enabled launch on its own (see <a href="#mobile-5">Open WebUI Desktop Configuration Investigation</a>). Rather than keep fighting the Desktop app's config, a pair of one-click batch scripts now bring the whole stack up and down instead — checking whether Ollama and Open WebUI are already running, starting Ollama if not, warming up the default model before Open WebUI comes up, and launching Open WebUI itself.</p>
+
+  <h3>Start AI Lab</h3>
+  <div class="code-block">@echo off
+echo version 2.200
+title Start AI Lab
+
+echo Checking Ollama server...
+tasklist | findstr /I "ollama.exe" >nul
+if errorlevel 1 (
+    echo Starting Ollama server...
+    start "Ollama Server" /min cmd /c "ollama serve"
+    timeout /t 5 /nobreak >nul
+) else (
+    echo Ollama is already running.
+)
+
+echo.
+echo Warming up qwen3:8b...
+ollama run qwen3:8b "READY" >nul 2>&1
+echo qwen3:8b is ready.
+
+echo.
+echo Checking Open WebUI...
+tasklist | findstr /I "open-webui.exe" >nul
+if errorlevel 1 (
+    echo Starting Open WebUI...
+    start "" "%LOCALAPPDATA%\Programs\open-webui\open-webui.exe"
+) else (
+    echo Open WebUI is already running.
+)
+
+echo.
+echo AI Lab startup complete.
+pause</div>
+
+  <h3>Stop AI Lab</h3>
+  <div class="code-block">@echo off
+echo version 2.200
+title Stop AI Lab
+
+echo.
+echo Stopping Open WebUI...
+taskkill /F /IM open-webui.exe
+
+echo.
+echo Stopping Ollama...
+taskkill /F /IM ollama.exe
+
+echo.
+echo AI Lab shutdown complete.
+pause</div>
+  <p>This isn't a true auto-start-on-boot service — it's still a manual double-click — but it turns "reconstruct the launch command from memory" into "run one script," which is most of what actually mattered day to day.</p>
+
+  <h2 id="mobile-15" class="chapter">Troubleshooting Notes <a class="anchor-link" href="#mobile-15" aria-label="Link to this section">#</a></h2>
+  <p>The Open WebUI Desktop app's own window sometimes showed a plain <code>Failed to fetch</code> error, even while the underlying server was healthy. Browsing directly to the server proved it was fine:</p>
+  <div class="code-block">curl http://127.0.0.1:8080
+curl http://localhost:8080
+# both returned the Open WebUI HTML page</div>
+  <p>The Desktop app's own shell turned out to be less reliable than just using a browser — which is also, conveniently, exactly what the iPhone has to do anyway. Browser access became the preferred path for both troubleshooting and everyday use.</p>
+
+  <h2 id="mobile-16" class="chapter">Remote Access with Tailscale <a class="anchor-link" href="#mobile-16" aria-label="Link to this section">#</a></h2>
+  <div class="status-banner status-success">Status: SUCCESS</div>
+  <p>With LAN access working and the startup scripts in place, the next step was reaching Open WebUI from the iPhone over cellular data — off the condo Wi-Fi entirely — using Tailscale.</p>
+  <p>The first attempt didn't work: Node A's Tailscale client was signed into the wrong identity, on a personal tailnet rather than the shared AI Lab tailnet that Node B and the iPhone already belonged to. Two devices on different tailnets can't see each other over Tailscale, no matter how correctly everything else is configured.</p>
+  <p>The fix was to sign Node A out of Tailscale and back in, explicitly selecting the shared AI Lab tailnet this time instead of the personal one:</p>
+  <div class="code-block">"C:\Program Files\Tailscale\tailscale.exe" logout
+"C:\Program Files\Tailscale\tailscale.exe" login</div>
+  <p>After signing in under the correct tailnet, the join request still needed the tailnet admin to approve it before Node A actually showed up for the other members — a deliberate access control step, not a bug.</p>
+  <p>Once approved, <code>tailscale status</code> showed all three devices on the same tailnet:</p>
+  <div class="code-block">100.115.162.13   Node A (ai-lab-b)   windows
+100.81.51.91     Node B              windows
+100.110.16.81    iphone171           iOS</div>
+  <p>With Wi-Fi turned off, the iPhone loaded Open WebUI over cellular data using Node A's Tailscale address:</p>
+  <div class="code-block">http://100.115.162.13:8080</div>
+  <p>Login succeeded, <code>qwen3:8b</code> was selected, and a test question — "Who invented AI?" — got a real response back, fully over cellular with no Wi-Fi involved at all.</p>
+  <div class="status-banner status-success">Mobile Access via Tailscale: SUCCESS</div>
+
+  <h2 id="mobile-17" class="chapter">Tailscale Account / Tailnet Lessons <a class="anchor-link" href="#mobile-17" aria-label="Link to this section">#</a></h2>
+  <div class="lessons">
+    <h3>Lessons learned</h3>
+    <ol>
+      <li>A device's sign-in identity and its Tailscale tailnet membership are two different things — signing in doesn't automatically put you on the tailnet you meant to join.</li>
+      <li>It's easy to land on the wrong tailnet during sign-in, especially when one person has both a personal account and a shared/admin account available.</li>
+      <li>Two devices on different tailnets are invisible to each other, even though both individually show as "connected" to Tailscale.</li>
+      <li>Joining a new tailnet can require the tailnet admin's approval before the device actually appears for other members.</li>
+      <li><code>tailscale logout</code> followed by <code>tailscale login</code>, explicitly selecting the correct tailnet at sign-in, is the fix.</li>
+    </ol>
+  </div>
+
+  <h2 id="mobile-18" class="chapter">Security Note <a class="anchor-link" href="#mobile-18" aria-label="Link to this section">#</a></h2>
+  <p>Safari flags the connection as "Not Secure" because Open WebUI is served over plain HTTP, not HTTPS — <code>http://100.115.162.13:8080</code> is a raw IP address with no TLS certificate behind it. The traffic itself isn't unprotected, though: Tailscale encrypts the device-to-device tunnel itself, so the connection is private between the iPhone and Node A even without HTTPS layered on top.</p>
+  <p>A cleaner long-term fix would be HTTPS, or a MagicDNS-friendly hostname instead of a raw IP — future work, not required for this to function today.</p>
 
   <p><a href="index.html">← Part 1: Local LLM Setup</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
-  <div class="status-banner status-pending">Next: Remote Access with Tailscale — Not Yet Implemented</div>
+  <div class="status-banner status-success">Mobile Access — LAN and Tailscale: SUCCESS</div>
 
 </div>
 

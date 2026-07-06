@@ -42,7 +42,7 @@
         │                                │
         └──────────── Tailscale ─────────┘
              private mesh network
-             (ai-lab-b: 100.80.190.11)</div>
+             (ai-lab-b: 100.115.162.13)</div>
 
   <h2>Node A — Beelink SER9</h2>
   <p>The first node to come online (July 2, 2026 — see <a href="../build-journal/001-the-beelink-awakens.html">Build Journal #001</a>). Runs Windows 11, with Ollama serving models locally and Open WebUI as the browser front end. Joined the Tailscale mesh as <code>ai-lab-b</code>.</p>
@@ -51,11 +51,11 @@
   <p>Running Linux with Ollama serving a model nicknamed "Gwen." A lightweight custom chat UI ("GwenUI") was also built for it, with a small Vercel serverless proxy reshaping Ollama's API responses.</p>
 
   <h2>The Tailscale layer</h2>
-  <p>Tailscale gives both nodes private IP addresses on a shared mesh network (a "tailnet"), so they can reach each other securely without exposing anything to the public internet. This is what will eventually let a Claude Code session, or Open WebUI, on one node talk to a model running on the other — and vice versa.</p>
+  <p>Tailscale gives both nodes private IP addresses on a shared mesh network (a "tailnet"), so they can reach each other securely without exposing anything to the public internet. This is also what lets a phone reach Open WebUI on Node A from anywhere, not just the condo LAN — see the Field Guide's <a href="../field-guide/mobile-lan-access.html">Mobile Access</a> page.</p>
 
   <div class="lessons">
     <h3>Lesson learned</h3>
-    Two machines on two different home networks can't see each other by IP address alone — that's exactly what Tailscale solves. Getting both nodes onto the same tailnet (rather than relying on port-forwarding or direct SSH across networks) is the current cross-node connectivity milestone.
+    Two machines on two different home networks can't see each other by IP address alone — that's exactly what Tailscale solves. Both nodes are now confirmed on the same tailnet (rather than relying on port-forwarding or direct SSH across networks) — though Node A briefly ended up on the wrong tailnet before that got sorted out, see <a href="../field-guide/mobile-lan-access.html#mobile-17">Tailscale Account / Tailnet Lessons</a>.
   </div>
 
   <h2>Where Claude Code fits</h2>
