@@ -45,14 +45,19 @@
 
   <div class="lessons">
     <h3>Scope</h3>
-    LAN access: complete. Tailscale remote access, including over cellular data: complete.
+    <p>This page documents the working mobile access path using Tailscale. The iPhone does not connect directly to Node A through its local LAN address. Instead, the iPhone reaches Node A through the Tailscale tailnet, using Node A's Tailscale IP address.</p>
+    <p>Working path:</p>
+    <div class="code-block">iPhone → Cellular or Wi-Fi Internet → Tailscale Tailnet → Node A → Open WebUI</div>
+    <p>Access URL:</p>
+    <div class="code-block">http://100.115.162.13:8080</div>
+    <p>Node A still has LAN IP <code>192.168.88.239</code>, but that address is documented only as its local network address, not the mobile access path.</p>
   </div>
 
   <h2 id="mobile-1" class="chapter">Goal <a class="anchor-link" href="#mobile-1" aria-label="Link to this section">#</a></h2>
-  <p>Allow an iPhone connected to a local Wi-Fi network to use Open WebUI running on Node A.</p>
+  <p>Allow an iPhone — whether on Wi-Fi or cellular data — to use Open WebUI running on Node A.</p>
   <figure class="img-42">
-    <img src="../images/mobile-goal-stack.png" alt="Diagram of iPhone connecting over Wi-Fi to the LAN, reaching BeeLink Node A (AI-Lab-B) at 192.168.88.239, running Open WebUI on TCP 8080">
-    <figcaption>iPhone → Wi-Fi → LAN → Node A → Open WebUI</figcaption>
+    <img src="../images/mobile-goal-stack.png" alt="Diagram of iPhone (Tailscale IP 100.110.16.81) over cellular or Wi-Fi internet, through the Tailscale tailnet, reaching Node A (AI-Lab-B, Tailscale IP 100.115.162.13, LAN IP 192.168.88.239), running Open WebUI on TCP 8080">
+    <figcaption>iPhone → Cellular/Wi-Fi Internet → Tailscale Tailnet → Node A → Open WebUI</figcaption>
   </figure>
 
   <h2 id="mobile-2" class="chapter">Baseline Configuration <a class="anchor-link" href="#mobile-2" aria-label="Link to this section">#</a></h2>
