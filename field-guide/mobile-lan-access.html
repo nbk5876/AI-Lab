@@ -58,7 +58,9 @@
   <h2 id="mobile-1" class="chapter">Goal <a class="anchor-link" href="#mobile-1" aria-label="Link to this section">#</a></h2>
   <p>Allow an iPhone — whether on Wi-Fi or cellular data — to use Open WebUI running on Node A.</p>
   <figure class="img-42">
-    <img src="../images/mobile-goal-stack.png" alt="Diagram of iPhone (Tailscale IP 100.110.16.81) over cellular or Wi-Fi internet, through the Tailscale tailnet, reaching Node A (AI-Lab-B, Tailscale IP 100.115.162.13, LAN IP 192.168.88.239), running Open WebUI on TCP 8080">
+    <a href="../images/mobile-goal-stack.png" target="_blank" rel="noopener">
+      <img src="../images/mobile-goal-stack.png" alt="Diagram of iPhone (Tailscale IP 100.110.16.81) over cellular or Wi-Fi internet, through the Tailscale tailnet, reaching Node A (AI-Lab-B, Tailscale IP 100.115.162.13, LAN IP 192.168.88.239), running Open WebUI on TCP 8080">
+    </a>
     <figcaption>iPhone → Cellular/Wi-Fi Internet → Tailscale Tailnet → Node A → Open WebUI</figcaption>
   </figure>
 
@@ -74,11 +76,15 @@
     <tr><th>iPhone LAN Address (during testing)</th><td>192.168.88.240</td></tr>
   </table>
   <figure class="img-60">
-    <img src="../images/hostname-ai-lab-b.jpg" alt="PowerShell showing hostname command returning AI-LAB-B">
+    <a href="../images/hostname-ai-lab-b.jpg" target="_blank" rel="noopener">
+      <img src="../images/hostname-ai-lab-b.jpg" alt="PowerShell showing hostname command returning AI-LAB-B">
+    </a>
     <figcaption>Confirming the hostname</figcaption>
   </figure>
   <figure class="img-60">
-    <img src="../images/ipconfig-tailscale-wifi.jpg" alt="ipconfig output showing the Tailscale adapter and Wi-Fi 2 with address 192.168.88.239">
+    <a href="../images/ipconfig-tailscale-wifi.jpg" target="_blank" rel="noopener">
+      <img src="../images/ipconfig-tailscale-wifi.jpg" alt="ipconfig output showing the Tailscale adapter and Wi-Fi 2 with address 192.168.88.239">
+    </a>
     <figcaption>ipconfig — Tailscale adapter (100.80.190.11) and Wi-Fi 2 (192.168.88.239) side by side</figcaption>
   </figure>
   <p>Tailscale was already present on the node during this phase, but signed into the wrong identity — see <a href="#mobile-17">Tailscale Account / Tailnet Lessons</a>. Once corrected, the node's Tailscale address changed to <code>100.115.162.13</code>, used throughout the remote-access phase below.</p>
@@ -96,19 +102,25 @@
 ------------ --------- -------------
 127.0.0.1         8080         19748</div>
   <figure class="img-60">
-    <img src="../images/listener-127-0-0-1-8080.jpg" alt="Get-NetTCPConnection output showing Open WebUI listening only on 127.0.0.1:8080">
+    <a href="../images/listener-127-0-0-1-8080.jpg" target="_blank" rel="noopener">
+      <img src="../images/listener-127-0-0-1-8080.jpg" alt="Get-NetTCPConnection output showing Open WebUI listening only on 127.0.0.1:8080">
+    </a>
     <figcaption>The initial listener — loopback only</figcaption>
   </figure>
   <p><code>127.0.0.1</code> is the loopback interface — Open WebUI was reachable only from the node itself. Other devices on the LAN could not connect to that listener.</p>
   <p>The owning process was identified as the Open WebUI Desktop app's bundled Python runtime:</p>
   <figure class="img-60">
-    <img src="../images/open-webui-process-id.jpg" alt="Get-Process output identifying the python.exe process serving Open WebUI">
+    <a href="../images/open-webui-process-id.jpg" target="_blank" rel="noopener">
+      <img src="../images/open-webui-process-id.jpg" alt="Get-Process output identifying the python.exe process serving Open WebUI">
+    </a>
     <figcaption>Identifying the process behind the listener</figcaption>
   </figure>
   <p>explicitly launching with:</p>
   <div class="code-block">open-webui.exe serve --host 127.0.0.1 --port 8080</div>
   <figure class="img-60">
-    <img src="../images/open-webui-commandline-loopback.jpg" alt="Get-CimInstance output showing the full command line with --host 127.0.0.1 --port 8080">
+    <a href="../images/open-webui-commandline-loopback.jpg" target="_blank" rel="noopener">
+      <img src="../images/open-webui-commandline-loopback.jpg" alt="Get-CimInstance output showing the full command line with --host 127.0.0.1 --port 8080">
+    </a>
     <figcaption>The full command line, confirming the loopback-only launch</figcaption>
   </figure>
   <p>A server bound to <code>127.0.0.1</code> only accepts connections that originate from the same machine — that's why the iPhone couldn't reach it yet.</p>
@@ -126,7 +138,9 @@
   "autoUpdate": true
 }</div>
   <figure class="img-60">
-    <img src="../images/open-webui-config-json.jpg" alt="Open WebUI Desktop config.json showing serveOnLocalNetwork set to false">
+    <a href="../images/open-webui-config-json.jpg" target="_blank" rel="noopener">
+      <img src="../images/open-webui-config-json.jpg" alt="Open WebUI Desktop config.json showing serveOnLocalNetwork set to false">
+    </a>
     <figcaption>The likely culprit: <code>serveOnLocalNetwork: false</code></figcaption>
   </figure>
   <p>Attempts to change this setting did not produce a persistent LAN-enabled startup — the Desktop app continued launching with <code>--host 127.0.0.1</code> on its own. <strong>Persistent LAN-enabled Open WebUI startup remains unresolved.</strong> The server that worked for this session was launched manually, and the window running it has to stay open.</p>
@@ -135,11 +149,15 @@
   <p>Early symptoms included several browsers attempting HTTPS instead of plain HTTP, secure-connection errors, roughly 60-second connection timeouts, an <code>Invalid HTTP request received</code> log line from Open WebUI, and later a WebSocket <code>WinError 121</code> semaphore timeout. None of this yet identified whether the real problem was Open WebUI, Windows Firewall, the Windows network profile, or browser protocol behavior.</p>
   <div class="figure-row">
     <figure>
-      <img src="../images/iphone-connection-timed-out.png" alt="iPhone Safari showing 192.168.88.239 took too long to respond, ERR_CONNECTION_TIMED_OUT">
+      <a href="../images/iphone-connection-timed-out.png" target="_blank" rel="noopener">
+        <img src="../images/iphone-connection-timed-out.png" alt="iPhone Safari showing 192.168.88.239 took too long to respond, ERR_CONNECTION_TIMED_OUT">
+      </a>
       <figcaption>Safari: connection timed out</figcaption>
     </figure>
     <figure>
-      <img src="../images/iphone-duckduckgo-timeout.jpg" alt="iPhone DuckDuckGo browser showing the request timed out">
+      <a href="../images/iphone-duckduckgo-timeout.jpg" target="_blank" rel="noopener">
+        <img src="../images/iphone-duckduckgo-timeout.jpg" alt="iPhone DuckDuckGo browser showing the request timed out">
+      </a>
       <figcaption>A second browser, same result</figcaption>
     </figure>
   </div>
@@ -198,7 +216,9 @@ Wi-Fi 2    Private    Internet</div>
 192.168.88.240:50599 - "GET /static/loader.js HTTP/1.1" 200
 192.168.88.240:50600 - "GET /static/custom.css HTTP/1.1" 200</div>
   <figure class="img-60">
-    <img src="../images/netstat-established-iphone-8080.jpg" alt="Get-NetTCPConnection output showing an Established connection on port 8080 from the iPhone's LAN address 192.168.88.240">
+    <a href="../images/netstat-established-iphone-8080.jpg" target="_blank" rel="noopener">
+      <img src="../images/netstat-established-iphone-8080.jpg" alt="Get-NetTCPConnection output showing an Established connection on port 8080 from the iPhone's LAN address 192.168.88.240">
+    </a>
     <figcaption>Established — the iPhone holding an open connection to Open WebUI on port 8080</figcaption>
   </figure>
   <p>No screenshot of the loaded Open WebUI chat screen itself survived the session, but this is stronger proof than a photo would be: it's the network stack itself confirming a live, established connection from the iPhone's address to the Open WebUI port.</p>
