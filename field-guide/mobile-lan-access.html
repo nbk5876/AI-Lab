@@ -341,7 +341,16 @@ curl http://localhost:8080
   <p>Safari flags the connection as "Not Secure" because Open WebUI is served over plain HTTP, not HTTPS — <code>http://100.115.162.13:8080</code> is a raw IP address with no TLS certificate behind it. The traffic itself isn't unprotected, though: Tailscale encrypts the device-to-device tunnel itself, so the connection is private between the iPhone and Node A even without HTTPS layered on top.</p>
   <p>A cleaner long-term fix would be HTTPS, or a MagicDNS-friendly hostname instead of a raw IP — future work, not required for this to function today.</p>
 
-  <p><a href="index.html">← Part 1: Local LLM Setup</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+  <h2>What's Next</h2>
+  <div class="grid">
+    <a class="card" href="reliable-remote-access.html">
+      <h2>Continue to Part 3</h2>
+      <p>Reliable Remote Access — idle states, Tailscale, and making the AI server behave like always-on infrastructure instead of a desktop client.</p>
+      <span class="card-link">Read →</span>
+    </a>
+  </div>
+
+  <p><a href="index.html">← Part 1: Local LLM Setup</a> &nbsp;·&nbsp; <a href="reliable-remote-access.html">Part 3: Reliable Remote Access →</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
   <div class="status-banner status-success">Mobile Access — LAN and Tailscale: SUCCESS</div>
 
 </div>

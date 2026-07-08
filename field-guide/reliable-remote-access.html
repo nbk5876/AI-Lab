@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local LLM Field Guide — Part 3 — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Local LLM Field Guide — Part 3</h1>
+  <div class="subtitle">Reliable Remote Access: Idle States, Tailscale, and an Always-Available AI Server</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="mobile-lan-access.html">← Part 2: Mobile Access</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <p>Part 2 proved that mobile access could work: an iPhone could reach Open WebUI on Lab PC 2 through Tailscale and run a local model. Part 3 asks a harder operational question: will that remote access still work after the AI server has been left unattended for hours?</p>
+
+  <div class="lessons">
+    <h3>Core distinction</h3>
+    <p><strong>Part 2 = making remote access work.</strong></p>
+    <p><strong>Part 3 = making remote access reliable.</strong></p>
+    <p>The goal is not just a successful demo. The goal is an AI Lab node that behaves like infrastructure: reachable when needed, even when nobody has touched the keyboard, mouse, or monitor for a long time.</p>
+  </div>
+
+  <h2 id="reliable-1" class="chapter">Goal <a class="anchor-link" href="#reliable-1" aria-label="Link to this section">#</a></h2>
+  <p>Allow approved devices on the Tailscale tailnet — especially the iPhone — to reach Open WebUI reliably after Lab PC 2 has been unattended for hours.</p>
+  <div class="diagram">iPhone
+100.110.16.81
+  │
+  │ Cellular or Wi-Fi Internet
+  ▼
+Tailscale Tailnet
+  │
+  ▼
+ai-lab-b (Lab PC 2)
+100.115.162.13
+  │
+  │ TCP 8080
+  ▼
+Open WebUI
+  │
+  ▼
+Ollama → qwen3:8b</div>
+
+  <h2 id="reliable-2" class="chapter">Known-Good Baseline from Part 2 <a class="anchor-link" href="#reliable-2" aria-label="Link to this section">#</a></h2>
+  <table class="spec-table">
+    <tr><th>Server</th><td>Lab PC 2 / Beelink SER9</td></tr>
+    <tr><th>Tailscale node name</th><td><code>ai-lab-b</code></td></tr>
+    <tr><th>Tailscale IP</th><td><code>100.115.162.13</code></td></tr>
+    <tr><th>Open WebUI port</th><td><code>8080</code></td></tr>
+    <tr><th>iPhone node</th><td><code>iphone171</code></td></tr>
+    <tr><th>iPhone Tailscale IP</th><td><code>100.110.16.81</code></td></tr>
+    <tr><th>Default model used for testing</th><td><code>qwen3:8b</code></td></tr>
+    <tr><th>Primary test URL</th><td><code>http://100.115.162.13:8080</code></td></tr>
+  </table>
+
+  <h2 id="reliable-3" class="chapter">Test Log Summary <a class="anchor-link" href="#reliable-3" aria-label="Link to this section">#</a></h2>
+  <p>Earlier tests included invalid HP-laptop attempts because that machine's Tailscale client was later found to be in <code>NoState</code>. The most useful data came from the iPhone and from local tests on Lab PC 2.</p>
+  <table class="spec-table">
+    <tr><th>Test</th><th>Client</th><th>Result</th></tr>
+    <tr><td>9</td><td>iPhone Chrome</td><td>Open WebUI loaded immediately; response completed in 63 seconds; model reported 23 seconds of thinking.</td></tr>
+    <tr><td>10</td><td>iPhone Chrome</td><td>Immediate repeat completed in 71 seconds; model reported 31 seconds of thinking.</td></tr>
+    <tr><td>11</td><td>iPhone Chrome</td><td>One-sentence prompt completed in 40 seconds; model reported 13 seconds of thinking.</td></tr>
+    <tr><td>13</td><td>Lab PC 2 Chrome</td><td>Localhost comparison completed in 44 seconds; model reported 24 seconds of thinking.</td></tr>
+    <tr><td>14</td><td>iPhone after roughly four hours idle</td><td>Failed. Open WebUI timed out and <code>ai-lab-b</code> appeared gray/offline in Tailscale.</td></tr>
+    <tr><td>15</td><td>iPhone after local wake activity</td><td>Success. Tailscale returned immediately, Open WebUI loaded immediately, and the prompt completed in 33 seconds.</td></tr>
+  </table>
+
+  <h2 id="reliable-4" class="chapter">Test 14 — Remote Access After Extended Idle Failed <a class="anchor-link" href="#reliable-4" aria-label="Link to this section">#</a></h2>
+  <p>After about four hours without local activity on Lab PC 2, the iPhone could not reach Open WebUI at the numeric Tailscale address:</p>
+  <div class="code-block">http://100.115.162.13:8080</div>
+  <p>Both iPhone browsers tested timed out. The Tailscale app then showed <code>ai-lab-b</code> as gray/offline. That shifted the diagnosis away from Open WebUI itself: the failure was not merely that port 8080 was slow or that the browser was confused. The Beelink's Tailscale node itself had become unavailable.</p>
+  <div class="status-banner status-pending">Test 14 Result: Remote access failed after extended idle</div>
+
+  <h2 id="reliable-5" class="chapter">Test 15 — Local Activity Restored Access <a class="anchor-link" href="#reliable-5" aria-label="Link to this section">#</a></h2>
+  <p>To wake Lab PC 2, the monitor input and USB switch were moved from the HP laptop back to the Beelink. No restart was performed. Tailscale was not restarted. Open WebUI and Ollama were not restarted.</p>
+  <p>The result was immediate:</p>
+  <ul>
+    <li><code>ai-lab-b</code> changed from gray/offline to green/online in Tailscale.</li>
+    <li>The iPhone loaded the Open WebUI login page immediately.</li>
+    <li>The prompt <em>“Answer in one sentence only: why do cats purr?”</em> completed in 33 seconds.</li>
+    <li>The model reported 10 seconds of thinking.</li>
+  </ul>
+
+  <figure class="img-70">
+    <img src="../images/test-14-vs-test-15.png" alt="Diagram comparing Test 14 remote access failure after extended idle with Test 15 local physical activity restoring Tailscale and Open WebUI access">
+    <figcaption>Remote requests did not restore connectivity; local physical activity immediately restored Tailscale and Open WebUI access.</figcaption>
+  </figure>
+  <div class="status-banner status-success">Test 15 Result: Local activity restored remote access immediately</div>
+
+  <h2 id="reliable-6" class="chapter">What This Proves — and What It Does Not Prove <a class="anchor-link" href="#reliable-6" aria-label="Link to this section">#</a></h2>
+  <p>The evidence strongly suggests that extended low-power idle behavior on Lab PC 2 makes the Tailscale node unreachable. Once the PC is locally awakened, the AI application stack appears to recover normally without restart or reconfiguration.</p>
+  <p>That does <strong>not</strong> yet prove the exact Windows power-state transition. It is more careful to say that local physical activity restored active operation than to say we have proven the machine left a specific sleep state.</p>
+
+  <h2 id="reliable-7" class="chapter">Windows Power-State Discovery <a class="anchor-link" href="#reliable-7" aria-label="Link to this section">#</a></h2>
+  <p>Lab PC 2 did not show a traditional Sleep option in the Start menu. Windows confirmed why:</p>
+  <div class="code-block">powercfg /a
+
+The following sleep states are available on this system:
+    Standby (S0 Low Power Idle) Network Connected
+    Hibernate
+    Fast Startup
+
+The following sleep states are not available on this system:
+    Standby (S1)
+    Standby (S2)
+    Standby (S3)
+    Hybrid Sleep</div>
+  <p>This means the Beelink uses Modern Standby / S0 Low Power Idle rather than classic S3 sleep. That matters because the lab is using this Windows mini-PC as a server, while S0 Low Power Idle is designed primarily for client-style power management.</p>
+
+  <h2 id="reliable-8" class="chapter">Post-Recovery Status Snapshot <a class="anchor-link" href="#reliable-8" aria-label="Link to this section">#</a></h2>
+  <p>After Test 15 restored remote access, the status script showed the application stack was healthy:</p>
+  <table class="spec-table">
+    <tr><th>Ollama</th><td>Running</td></tr>
+    <tr><th>Open WebUI desktop app</th><td>Running</td></tr>
+    <tr><th>Open WebUI server</th><td>Reachable locally at <code>127.0.0.1:8080</code></td></tr>
+    <tr><th><code>qwen3:8b</code></th><td>Loaded successfully during warm-up</td></tr>
+    <tr><th>Tailscale</th><td><code>ai-lab-b</code> online; <code>iphone171</code> online</td></tr>
+    <tr><th>Open Terminal / llama.cpp</th><td>Not reachable, but not part of the active Ollama/Open WebUI chat path</td></tr>
+  </table>
+  <p>This supports the conclusion that the four-hour failure was not an Open WebUI or Ollama crash. The application stack remained recoverable. The remote-access problem was tied to whether Lab PC 2 stayed reachable through Tailscale while idle.</p>
+
+  <h2 id="reliable-9" class="chapter">Working Hypothesis <a class="anchor-link" href="#reliable-9" aria-label="Link to this section">#</a></h2>
+  <div class="lessons">
+    <p><strong>Working hypothesis:</strong> Lab PC 2 is acting like a desktop client computer, not an always-on server. During extended S0 Low Power Idle, the machine appears to stop maintaining Tailscale availability. Local physical activity restores active operation immediately.</p>
+  </div>
+  <p>The desired behavior is different:</p>
+  <div class="code-block">Incoming Tailscale traffic → Lab PC 2 remains reachable → Open WebUI responds</div>
+
+  <h2 id="reliable-10" class="chapter">Next Diagnostic Step <a class="anchor-link" href="#reliable-10" aria-label="Link to this section">#</a></h2>
+  <p>The next step is to generate a Windows SleepStudy report before changing any power settings:</p>
+  <div class="code-block">powercfg /sleepstudy</div>
+  <p>That report should show when Lab PC 2 entered Modern Standby, how long it remained there, and which devices or services were active during the idle period.</p>
+
+  <h2>Lessons Learned</h2>
+  <ol>
+    <li>A Tailscale node's visibility on the tailnet is not guaranteed just because the application stack underneath it (Ollama, Open WebUI) is healthy.</li>
+    <li>Extended idle time with no local activity on Lab PC 2 correlates with the node going gray/offline in Tailscale, blocking all remote access regardless of app health.</li>
+    <li>A single instance of local physical activity was enough to restore full connectivity immediately, with no service restarts required.</li>
+    <li>Because recovery required no restart, the underlying application stack was never actually broken — only the node's network reachability was.</li>
+    <li><code>powercfg /a</code> revealed the Beelink only supports Modern Standby (S0 Low Power Idle), not classic S3 sleep — a client-oriented power model, not a server one.</li>
+    <li>A post-recovery status snapshot is a fast way to tell whether an outage was an application failure or a connectivity failure — check both rather than assuming.</li>
+    <li>Remote requests alone, from the iPhone, did not wake the machine or restore its Tailscale presence — only local physical activity did.</li>
+    <li>Before changing any power settings, capture a <code>powercfg /sleepstudy</code> report first, so the actual idle transition is documented rather than assumed.</li>
+  </ol>
+
+  <h2 id="reliable-11" class="chapter">Likely Long-Term Direction <a class="anchor-link" href="#reliable-11" aria-label="Link to this section">#</a></h2>
+  <p>The long-term goal is to operate Lab PC 2 like infrastructure. The monitor can turn off, but the computer itself should remain reachable through Tailscale whenever Open WebUI is expected to be available.</p>
+  <ul>
+    <li>Prevent Lab PC 2 from entering a disruptive low-power idle state.</li>
+    <li>Allow the display to turn off while keeping the computer awake.</li>
+    <li>Review Wi-Fi adapter power-management settings.</li>
+    <li>Review BIOS/firmware Modern Standby options.</li>
+    <li>Consider wired Ethernet if available.</li>
+    <li>Treat Lab PC 2 as an always-on AI server rather than a normal desktop client.</li>
+  </ul>
+
+  <h2>What's Next</h2>
+  <div class="grid">
+    <a class="card" href="mobile-lan-access.html">
+      <h2>Back to Part 2</h2>
+      <p>Mobile Access — LAN and Tailscale — how the iPhone access path was first made to work.</p>
+      <span class="card-link">Read →</span>
+    </a>
+  </div>
+
+  <p><a href="mobile-lan-access.html">← Part 2: Mobile Access</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+  <div class="status-banner status-pending">Reliable Remote Access: Diagnosis in Progress</div>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
