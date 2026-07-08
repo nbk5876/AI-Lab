@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local LLM Field Guide — Part 4 — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Local LLM Field Guide — Part 4</h1>
+  <div class="subtitle">From Desktop Client to Always-On Server: The Modern Standby Fix</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="reliable-remote-access.html">← Part 3: Reliable Remote Access</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <p>Part 3 diagnosed the problem: after roughly four hours of idle, Lab PC 2 (<code>ai-lab-b</code>) drops off the Tailscale tailnet, and no amount of remote knocking brings it back — only local physical activity does. <code>powercfg /a</code> revealed why: the Beelink SER9 only supports Modern Standby (S0 Low Power Idle), a client-oriented power model that suspends network availability during deep idle. Part 4 applies the fix and proves it with the same test methodology that caught the failure.</p>
+
+  <div class="lessons">
+    <h3>Core distinction</h3>
+    <p><strong>Part 3 = diagnosing why remote access fails after idle.</strong></p>
+    <p><strong>Part 4 = removing the failure state and proving it stays removed.</strong></p>
+    <p>The standard of proof is the same protocol that produced Test 14's failure: leave the machine completely untouched for hours, then attempt access from the iPhone. If the fix is real, the exact scenario that failed before must now succeed.</p>
+  </div>
+
+  <h2 id="server-1" class="chapter">Goal <a class="anchor-link" href="#server-1" aria-label="Link to this section">#</a></h2>
+  <p>Configure Lab PC 2 so it never enters the idle state that takes <code>ai-lab-b</code> off the tailnet — the display may sleep, but the computer must stay reachable — and verify the change with repeatable idle tests.</p>
+  <div class="diagram">BEFORE (Test 14)                      AFTER (target)
+
+4+ hours idle                         4+ hours idle
+  │                                     │
+  ▼                                     ▼
+S0 Low Power Idle                     Display off, system awake
+  │                                     │
+  ▼                                     ▼
+ai-lab-b OFFLINE                      ai-lab-b ONLINE
+  │                                     │
+  ▼                                     ▼
+iPhone request fails                  iPhone request succeeds</div>
+
+  <h2 id="server-2" class="chapter">Starting Point <a class="anchor-link" href="#server-2" aria-label="Link to this section">#</a></h2>
+  <table class="spec-table">
+    <tr><th>Server</th><td>Lab PC 2 / Beelink SER9, Windows 11</td></tr>
+    <tr><th>Tailscale node</th><td><code>ai-lab-b</code> — <code>100.115.162.13</code></td></tr>
+    <tr><th>Open WebUI</th><td>Port <code>8080</code>, started via Start AI Lab script</td></tr>
+    <tr><th>Test client</th><td>iPhone (<code>iphone171</code>, <code>100.110.16.81</code>) on cellular, Wi-Fi off</td></tr>
+    <tr><th>Test model</th><td><code>qwen3:8b</code></td></tr>
+    <tr><th>Known failure mode</th><td>Node goes gray/offline after ~4 hours of no local activity (Test 14)</td></tr>
+    <tr><th>Available sleep states</th><td>S0 Low Power Idle only — no S1/S2/S3 (<code>powercfg /a</code>, Part 3)</td></tr>
+  </table>
+
+  <h2 id="server-3" class="chapter">Step 1 — Capture the Baseline SleepStudy <a class="anchor-link" href="#server-3" aria-label="Link to this section">#</a></h2>
+  <p>Before changing anything, generate the SleepStudy report so the pre-fix idle behavior is documented rather than assumed. From an elevated PowerShell or Command Prompt:</p>
+  <div class="code-block">powercfg /sleepstudy</div>
+  <p>The report is written to:</p>
+  <div class="code-block">C:\WINDOWS\system32\sleepstudy-report.html</div>
+  <p>Copy it somewhere safe before it gets overwritten by later runs. The report should show the Modern Standby sessions from the Test 14 window — when the machine entered low-power idle, how long it stayed there, and which components were active or suspended during the session.</p>
+  <table class="spec-table">
+    <tr><th>Baseline report captured</th><td>July 7, 2026 — covers March 24 through July 7</td></tr>
+    <tr><th>Modern Standby sessions in window</th><td>77 sessions, 122.6 total hours; longest single session 18.0 hours (July 4–5)</td></tr>
+    <tr><th>Exit reasons across all 77 sessions</th><td>Input Keyboard (34), Input Mouse (14), scheduled maintenance tasks (28). <strong>Zero network wakes.</strong></td></tr>
+    <tr><th>Display-sleep to standby delay</th><td>Median 17 seconds — on this hardware, display off effectively means system asleep</td></tr>
+  </table>
+  <div class="lessons">
+    <h3>What the baseline proves</h3>
+    <p>Across months of standby sessions, the machine was never once woken by network traffic — only by local input or Windows' own maintenance scheduler. The Test 14 failure wasn't bad luck or a Tailscale bug: at the OS level, an inbound request was never a wake candidate at all.</p>
+    <p>The maintenance scheduler does briefly wake the machine on its own timetable (it ended the 18-hour session), but those wakes are momentary — the box drops straight back into standby, so the node still reads offline whenever a human actually tests it.</p>
+  </div>
+
+  <h2 id="server-4" class="chapter">Step 2 — Apply the Power Settings Fix <a class="anchor-link" href="#server-4" aria-label="Link to this section">#</a></h2>
+  <p>The fix has two halves: the system must never sleep, and the display should still turn itself off. Both are one-line <code>powercfg</code> commands (elevated prompt, AC settings — the mini PC is always on wall power):</p>
+  <div class="code-block"># Never enter standby while plugged in
+powercfg /change standby-timeout-ac 0
+
+# Display may still sleep after 10 minutes
+powercfg /change monitor-timeout-ac 10</div>
+  <p>Verify the active plan picked up both values:</p>
+  <div class="code-block">powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE
+powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE</div>
+  <p>A standby timeout of <code>0</code> means "never." This directly removes the state Test 14 caught the machine in: with no standby transition, there is no S0 Low Power Idle session for Tailscale to disappear into.</p>
+  <table class="spec-table">
+    <tr><th>Settings applied</th><td>July 7, 2026 — elevated Command Prompt, Balanced power scheme</td></tr>
+    <tr><th>Verified via <code>powercfg /query</code></th><td>STANDBYIDLE AC = <code>0x00000000</code> (never sleep) · VIDEOIDLE AC = <code>0x00000258</code> (display off after 600 s = 10 min)</td></tr>
+    <tr><th>Baseline report archived</th><td><code>AI-Lab\docs\sleepstudy-report.html</code> (pre-fix evidence)</td></tr>
+  </table>
+
+  <h2 id="server-5" class="chapter">Test 16 — Remote Access After Extended Idle, Retested <a class="anchor-link" href="#server-5" aria-label="Link to this section">#</a></h2>
+  <p>This is the Test 14 protocol, repeated exactly, with only the power settings changed:</p>
+  <ol>
+    <li>Confirm the stack is up (Start AI Lab script, <code>ai-lab-b</code> green in Tailscale).</li>
+    <li>Leave Lab PC 2 completely untouched — no keyboard, mouse, or monitor-switch activity — for at least 4 hours.</li>
+    <li>On the iPhone, turn Wi-Fi off so the test runs over cellular.</li>
+    <li>Check the Tailscale app: is <code>ai-lab-b</code> green or gray?</li>
+    <li>Browse to <code>http://100.115.162.13:8080</code>.</li>
+    <li>Run the standard prompt: <em>"Answer in one sentence only: why do cats purr?"</em></li>
+  </ol>
+  <table class="spec-table">
+    <tr><th>Date / time stack confirmed up</th><td>PENDING</td></tr>
+    <tr><th>Idle duration before test</th><td>PENDING (target: 4+ hours)</td></tr>
+    <tr><th><code>ai-lab-b</code> status in Tailscale app</th><td>PENDING</td></tr>
+    <tr><th>Open WebUI page load</th><td>PENDING</td></tr>
+    <tr><th>Prompt completion time</th><td>PENDING</td></tr>
+    <tr><th>Model thinking time</th><td>PENDING</td></tr>
+  </table>
+  <div class="status-banner status-pending">Test 16 Result: PENDING</div>
+
+  <h2 id="server-6" class="chapter">Test 17 — Overnight Endurance <a class="anchor-link" href="#server-6" aria-label="Link to this section">#</a></h2>
+  <p>Four hours proves the fix; a full night proves it's infrastructure. Same protocol as Test 16, but with 12+ hours of untouched idle — ideally overnight, ending with a morning access attempt from the iPhone on cellular before anyone has touched the lab.</p>
+  <table class="spec-table">
+    <tr><th>Idle duration</th><td>PENDING (target: 12+ hours)</td></tr>
+    <tr><th><code>ai-lab-b</code> status in Tailscale app</th><td>PENDING</td></tr>
+    <tr><th>Open WebUI page load</th><td>PENDING</td></tr>
+    <tr><th>Prompt completion time</th><td>PENDING</td></tr>
+  </table>
+  <div class="status-banner status-pending">Test 17 Result: PENDING</div>
+
+  <h2 id="server-7" class="chapter">Test 18 — Reboot Resilience <a class="anchor-link" href="#server-7" aria-label="Link to this section">#</a></h2>
+  <p>The idle fix covers the common case, but a Windows Update reboot at 3 a.m. is the other way a "server" silently becomes unreachable. This test checks what survives a restart with nobody at the keyboard.</p>
+  <p>First, enable Tailscale's unattended mode so the tailnet connection comes up before anyone logs in: Tailscale tray icon → Settings → <strong>Run unattended</strong>. Then:</p>
+  <ol>
+    <li>Restart Lab PC 2.</li>
+    <li>Do <strong>not</strong> log in. Walk away.</li>
+    <li>From the iPhone, check whether <code>ai-lab-b</code> comes back green in Tailscale.</li>
+    <li>Attempt to load <code>http://100.115.162.13:8080</code>.</li>
+  </ol>
+  <p>Expected split result: Tailscale should return (unattended mode runs as a system service), but Open WebUI and Ollama likely will not — the Start AI Lab script is a manual double-click, not a boot task. If so, that's not a failed test; it's the next finding, and the fix (a Task Scheduler at-startup job for the Start AI Lab script) becomes its own documented step.</p>
+  <table class="spec-table">
+    <tr><th>Unattended mode enabled</th><td>PENDING</td></tr>
+    <tr><th><code>ai-lab-b</code> reachable after reboot, pre-login</th><td>PENDING</td></tr>
+    <tr><th>Open WebUI reachable after reboot, pre-login</th><td>PENDING</td></tr>
+    <tr><th>Follow-up needed</th><td>PENDING</td></tr>
+  </table>
+  <div class="status-banner status-pending">Test 18 Result: PENDING</div>
+
+  <h2 id="server-8" class="chapter">Escalation Path (If Test 16 Fails) <a class="anchor-link" href="#server-8" aria-label="Link to this section">#</a></h2>
+  <p>If the node still drops off the tailnet with standby disabled, the next suspects in order:</p>
+  <ol>
+    <li><strong>Wi-Fi adapter power management.</strong> Device Manager → network adapter → Power Management tab → uncheck <em>"Allow the computer to turn off this device to save power."</em> Also set the power plan's Wireless Adapter Settings → Power Saving Mode → <strong>Maximum Performance</strong>.</li>
+    <li><strong>Disable Modern Standby entirely</strong> via registry — the known workaround for mini PCs whose firmware misbehaves in S0:
+      <div class="code-block">reg add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v PlatformAoAcOverride /t REG_DWORD /d 0
+# then reboot</div>
+      This is reversible (delete the value and reboot) but is a bigger hammer — try it only after the simpler fixes are ruled out, and re-run <code>powercfg /a</code> afterward to confirm the change.</li>
+    <li><strong>Wired Ethernet.</strong> Already on the long-term list from Part 3 — removes Wi-Fi power saving from the equation entirely.</li>
+  </ol>
+  <p>Each escalation step, if used, gets its own test number and its own before/after entry here.</p>
+
+  <h2 id="server-9" class="chapter">Future Note — Model Keep-Alive <a class="anchor-link" href="#server-9" aria-label="Link to this section">#</a></h2>
+  <p>Observed during the informal 20-minute spot check (July 7): the Open WebUI page loaded immediately, but the standard cat-purring prompt took ~90 seconds to complete while reporting only 14 seconds of thinking. The gap is Ollama's model eviction: by default a model is unloaded from RAM after about 5 minutes without requests, so the first prompt after a quiet stretch pays a cold-start reload from SSD.</p>
+  <p>This is a latency effect, not a connectivity problem — a separate phenomenon from the standby issue this page fixes. The machine stayed reachable; the model just wasn't warm.</p>
+  <p>Planned tuning: extend the keep-alive window to two hours by setting an environment variable on Lab PC 2 before Ollama starts:</p>
+  <div class="code-block">setx OLLAMA_KEEP_ALIVE "2h"
+# then restart Ollama (Stop AI Lab / Start AI Lab)</div>
+  <p>Trade-off: the model stays resident in RAM for the full window. A follow-up mini-test could measure warm vs. cold response time for the same prompt.</p>
+  <table class="spec-table">
+    <tr><th>Status</th><td>PENDING — apply after Tests 16–18 complete, so it doesn't muddy their results</td></tr>
+  </table>
+
+  <h2>Lessons Learned</h2>
+  <ol>
+    <li>PENDING — to be filled in after Tests 16–18 complete.</li>
+  </ol>
+
+  <h2>What's Next</h2>
+  <div class="grid">
+    <a class="card" href="reliable-remote-access.html">
+      <h2>Back to Part 3</h2>
+      <p>Reliable Remote Access — the Test 14/15 investigation that diagnosed the Modern Standby failure this page fixes.</p>
+      <span class="card-link">Read →</span>
+    </a>
+  </div>
+
+  <p><a href="reliable-remote-access.html">← Part 3: Reliable Remote Access</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+  <div class="status-banner status-pending">Always-On Server Conversion: Tests In Progress</div>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
