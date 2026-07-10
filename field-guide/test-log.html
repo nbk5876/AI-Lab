@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local LLM Field Guide — Test Log — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>AI Lab Test Log</h1>
+  <div class="subtitle">Every remote-access and reliability test, numbered and dated — the working record behind Parts 2–4</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="reliable-remote-access.html">← Part 3: Reliable Remote Access</a> &nbsp;·&nbsp; <a href="always-on-server.html">Part 4: Always-On Server</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <p>This page is the readable view of the lab's master test log. Tests 1–13 established the remote-access path and are told in narrative form in <a href="mobile-lan-access.html">Part 2</a> and <a href="reliable-remote-access.html">Part 3</a>; Tests 14 onward diagnose and fix the extended-idle failure, documented in <a href="always-on-server.html">Part 4</a>. Prefer the raw spreadsheet? <a href="AI_Lab_Test_Log.xlsx">Download the working log (.xlsx)</a>.</p>
+
+  <div class="lessons">
+    <h3>How to read this log</h3>
+    <p>Every test has a number, a client device, and a validity ruling. Tests marked <strong>Invalid</strong> were run from the HP laptop while its Tailscale client was silently stuck in <code>NoState</code> — they measured nothing and are kept only for honesty. The standard test prompt is <em>"Answer in one sentence only: why do cats purr?"</em>; timing comparisons use that prompt unless noted.</p>
+  </div>
+
+  <h2 id="log-1" class="chapter">Summary — All Tests <a class="anchor-link" href="#log-1" aria-label="Link to this section">#</a></h2>
+  <table class="spec-table">
+    <tr><th>Test</th><th>Client</th><th>Result</th><th>Note</th></tr>
+    <tr><td>1</td><td>HP</td><td>Failed — Invalid</td><td>HP Tailscale later found in NoState</td></tr>
+    <tr><td>2</td><td>HP</td><td>Failed — Invalid</td><td>Same NoState invalidation</td></tr>
+    <tr><td>3</td><td>iPhone</td><td>Stopped</td><td>No response after 4 minutes</td></tr>
+    <tr><td>4</td><td>iPhone</td><td>Failed</td><td>Page could not be loaded (DuckDuckGo, IP)</td></tr>
+    <tr><td>5</td><td>iPhone</td><td>Failed</td><td>Page could not be loaded (DuckDuckGo, MagicDNS)</td></tr>
+    <tr><td>6</td><td>Lab PC 2</td><td>Healthy</td><td>Local stack status check after waking PC</td></tr>
+    <tr><td>7</td><td>HP</td><td>Failed — Invalid</td><td>NoState invalidation</td></tr>
+    <tr><td>8</td><td>HP</td><td>Failed — Invalid</td><td>NoState invalidation</td></tr>
+    <tr><td>9</td><td>iPhone</td><td>Success</td><td>First clean remote query: 63 s / 23 s thinking</td></tr>
+    <tr><td>10</td><td>iPhone</td><td>Success</td><td>Immediate repeat: 71 s / 31 s thinking</td></tr>
+    <tr><td>11</td><td>iPhone</td><td>Success</td><td>One-sentence prompt: 40 s / 13 s thinking</td></tr>
+    <tr><td>12</td><td>iPhone</td><td>Success — Verify</td><td>Possible duplicate of Test 11 in source log</td></tr>
+    <tr><td>13</td><td>Lab PC 2</td><td>Success</td><td>Localhost comparison: 44 s / 24 s thinking</td></tr>
+    <tr><td>14</td><td>iPhone</td><td><strong>Failed</strong></td><td>~4 h idle → node offline; the failure that drove Part 3/4</td></tr>
+    <tr><td>15</td><td>iPhone</td><td>Success</td><td>Local wake instantly restored access; 33 s / 10 s</td></tr>
+    <tr><td>16</td><td>iPhone</td><td><strong>Success</strong></td><td>6 h 02 m untouched idle survived after power fix</td></tr>
+    <tr><td>16b</td><td>iPhone</td><td>Success</td><td>Warm second query, 55 s / 40 s (heavier prompt)</td></tr>
+    <tr><td>19</td><td>iPhone</td><td>Success</td><td>MagicDNS short name works; 121 s cold / 31 s thinking</td></tr>
+    <tr><td>19b</td><td>iPhone</td><td>Success</td><td>Warm repeat 44 s — cold/warm gap ≈ 77 s</td></tr>
+    <tr><td>17a</td><td>iPhone</td><td>Failed → Success</td><td>Night 2: connectivity held; cold-load timeout, retry OK</td></tr>
+    <tr><td>17b</td><td>HP</td><td>Success</td><td>HP recovered from NoState; MagicDNS works from desktop</td></tr>
+    <tr><td>19c</td><td>iPhone</td><td>Success</td><td>Phone-only stopwatch protocol: 104 s / 52 s thinking</td></tr>
+    <tr><td>17</td><td>iPhone</td><td>Pending</td><td>12+ hour untouched idle endurance</td></tr>
+    <tr><td>18</td><td>iPhone</td><td>Pending</td><td>Reboot resilience, Tailscale unattended mode</td></tr>
+  </table>
+
+  <h2 id="log-2" class="chapter">Test Detail — 14 Onward <a class="anchor-link" href="#log-2" aria-label="Link to this section">#</a></h2>
+  <p>Tests 1–13 are covered in narrative in Parts 2 and 3. Details below begin where the extended-idle investigation starts.</p>
+
+  <h3 id="test-14">Test 14 — Remote access after ~4 hours idle</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>iPhone Chrome → <code>100.115.162.13:8080</code></td></tr>
+    <tr><th>Result</th><td>Failed (timeout in two browsers); <code>ai-lab-b</code> gray/offline in Tailscale</td></tr>
+    <tr><th>Diagnosis</th><td>Modern Standby (S0 Low Power Idle) — SleepStudy later showed the machine entered standby a median of 17 seconds after display sleep, with zero network wakes across 77 sessions</td></tr>
+  </table>
+
+  <h3 id="test-15">Test 15 — Local wake restores access</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>iPhone Chrome → <code>100.115.162.13:8080</code></td></tr>
+    <tr><th>Result</th><td>Success — 33 s total, 10 s thinking</td></tr>
+    <tr><th>Observation</th><td>Moving the monitor/USB switch back to the Beelink restored Tailscale and Open WebUI instantly, with no service restarts — proof the stack never crashed; only reachability was lost</td></tr>
+  </table>
+
+  <h3 id="test-16">Test 16 — First overnight after the power fix</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>iPhone browser, cellular → <code>100.115.162.13:8080</code></td></tr>
+    <tr><th>Idle window</th><td>6 h 02 m untouched (11:30 PM Jul 7 – 5:32 AM Jul 8)</td></tr>
+    <tr><th>Result</th><td>Success — first query answered immediately (18 s thinking); warm follow-up (16b) at 7:43 AM: 55 s / 40 s on a heavier prompt</td></tr>
+    <tr><th>Fix under test</th><td><code>powercfg /change standby-timeout-ac 0</code> + <code>monitor-timeout-ac 10</code>, applied July 7</td></tr>
+  </table>
+
+  <h3 id="test-19">Test 19 / 19b — Name-based access and the cold/warm gap</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>iPhone browser, cellular → <code>http://ai-lab-b:8080</code> (MagicDNS short name)</td></tr>
+    <tr><th>Result</th><td>Success — bare hostname resolved; cold run 121 s (31 s thinking), warm repeat 44 s (17 s thinking)</td></tr>
+    <tr><th>Finding</th><td>The ~77 s difference is Ollama reloading <code>qwen3:8b</code> from SSD after its default 5-minute keep-alive eviction</td></tr>
+  </table>
+
+  <h3 id="test-17a">Test 17a — Second overnight, and a new failure mode</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>iPhone browser, Wi-Fi → <code>ai-lab-b:8080</code></td></tr>
+    <tr><th>Idle window</th><td>~6.5 h untouched (midnight – 6:25 AM Jul 9)</td></tr>
+    <tr><th>Result</th><td>Connectivity: success — page loaded, node online, history rendered. First response: <strong>"Load failed"</strong> — a cold-load timeout, not a connectivity failure. Retry at 6:40 succeeded; follow-up ran with 11 s thinking</td></tr>
+    <tr><th>Significance</th><td>The Test 14 failure mode did not recur on night 2; the new failure is a latency problem with a chosen mitigation (<code>OLLAMA_KEEP_ALIVE=2h</code>, to be applied after Tests 17–18)</td></tr>
+  </table>
+
+  <h3 id="test-17b">Test 17b — The HP redemption</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>HP desktop, Edge → <code>ai-lab-b:8080</code></td></tr>
+    <tr><th>Result</th><td>Success — 26 s thinking</td></tr>
+    <tr><th>Significance</th><td>The machine whose <code>NoState</code> Tailscale client invalidated Tests 1–2 and 7–8 is now healthy and resolving MagicDNS — name-based access confirmed on a second client platform</td></tr>
+  </table>
+
+  <h3 id="test-19c">Test 19c — Phone-only protocol</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>iPhone browser, cellular → <code>ai-lab-b:8080</code>, timed by stopwatch</td></tr>
+    <tr><th>Result</th><td>Success — 104 s total, 52 s thinking on an open-ended prompt</td></tr>
+    <tr><th>Finding</th><td>Cold-ish start after a 47-minute gap cost ~52 s of overhead vs. ~90 s the day before — reload cost varies; call it 1–1.5 minutes</td></tr>
+  </table>
+
+  <h3 id="test-pending">Tests 17 and 18 — Pending</h3>
+  <table class="spec-table">
+    <tr><th>Test 17</th><td>12+ hour untouched idle endurance — two ~6-hour nights already banked; a deliberate full-day window remains</td></tr>
+    <tr><th>Test 18</th><td>Reboot resilience: enable Tailscale unattended mode, reboot, do not log in, test from the phone</td></tr>
+  </table>
+  <div class="status-banner status-pending">Tests 17 and 18: Pending</div>
+
+  <h2 id="log-3" class="chapter">Conclusions After Tests 1–13 <a class="anchor-link" href="#log-3" aria-label="Link to this section">#</a></h2>
+  <div class="lessons">
+    <p>Tests 1–13 established that the AI Lab stack can provide both local and remote inference, while revealing an unresolved intermittent remote-access reliability issue. Open WebUI listens on all interfaces (<code>0.0.0.0:8080</code>), Ollama loads and runs <code>qwen3:8b</code>, and the complete iPhone → Tailscale → Open WebUI → Ollama path completed multiple queries. Successful iPhone tests ran 40–71 seconds against 44 seconds locally — Tailscale is not the bottleneck; most delay is model inference on CPU.</p>
+    <p>Remote access was temporarily unavailable during Tests 3–5 despite the local stack later being found operational. Tests 1, 2, 7, and 8 are invalid for evaluating Lab PC 2 because the HP laptop's Tailscale client was later found in <code>NoState</code>. The open question — whether remote access survives extended S0 Low Power Idle — became Test 14.</p>
+  </div>
+
+  <h2 id="log-4" class="chapter">Conclusions After Tests 14–19 <a class="anchor-link" href="#log-4" aria-label="Link to this section">#</a></h2>
+  <div class="lessons">
+    <p>Test 14's open question is answered. The SleepStudy baseline confirmed the root cause: the Beelink enters Modern Standby a median of 17 seconds after display sleep, and across 77 standby sessions (122.6 hours) it was never once woken by network traffic — remote requests were never wake candidates at the OS level.</p>
+    <p>The fix — <code>standby-timeout-ac 0</code> with <code>monitor-timeout-ac 10</code>, applied July 7 — removed the standby transition while letting the display sleep. Remote access then succeeded after 6 h 02 m untouched idle (Test 16) and again after ~6.5 h a second night (Test 17a): the exact scenario that failed in Test 14. MagicDNS name-based access is confirmed from iPhone-on-cellular and from the recovered HP desktop (Tests 19, 17b).</p>
+    <p>New secondary finding: with Ollama's default 5-minute keep-alive, the first query after a long idle can exceed the request timeout while the model reloads from SSD ("Load failed," Test 17a) — a latency failure, not a connectivity failure; retry succeeds. Measured reload cost ≈ 1–1.5 minutes (121 s cold vs. 44 s warm). Planned mitigation: <code>OLLAMA_KEEP_ALIVE=2h</code>, after Tests 17 and 18 complete.</p>
+  </div>
+
+  <h2>What's Next</h2>
+  <div class="grid">
+    <a class="card" href="always-on-server.html">
+      <h2>Part 4: Always-On Server</h2>
+      <p>The full narrative behind Tests 14–19 — diagnosis, the Modern Standby fix, and the tests that proved it.</p>
+      <span class="card-link">Read →</span>
+    </a>
+  </div>
+
+  <p><a href="reliable-remote-access.html">← Part 3</a> &nbsp;·&nbsp; <a href="always-on-server.html">Part 4</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a> &nbsp;·&nbsp; <a href="AI_Lab_Test_Log.xlsx">Download the .xlsx</a></p>
+  <div class="status-banner status-pending">Test Log: Live document — Tests 17 and 18 pending</div>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

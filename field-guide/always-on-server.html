@@ -115,17 +115,22 @@ powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE</div>
     <li>Run the standard prompt: <em>"Answer in one sentence only: why do cats purr?"</em></li>
   </ol>
   <table class="spec-table">
-    <tr><th>Date / time stack confirmed up</th><td>PENDING</td></tr>
-    <tr><th>Idle duration before test</th><td>PENDING (target: 4+ hours)</td></tr>
-    <tr><th><code>ai-lab-b</code> status in Tailscale app</th><td>PENDING</td></tr>
-    <tr><th>Open WebUI page load</th><td>PENDING</td></tr>
-    <tr><th>Prompt completion time</th><td>PENDING</td></tr>
-    <tr><th>Model thinking time</th><td>PENDING</td></tr>
+    <tr><th>Hands-off began</th><td>July 7, 2026, ~11:30 PM (after the informal 20-minute spot check)</td></tr>
+    <tr><th>Idle duration before test</th><td><strong>6 hours 2 minutes</strong> — half again longer than the ~4 hours that produced the Test 14 failure</td></tr>
+    <tr><th>First access</th><td>July 8, 5:32 AM, iPhone on cellular (Wi-Fi off). Open WebUI loaded and answered a query immediately (18 seconds of thinking) — Tailscale app not separately checked, but a rendering, responding page is itself proof the node was online.</td></tr>
+    <tr><th>Documented query (7:43 AM)</th><td><em>"Could purring cats have won World War II? Answer in one sentence."</em> — completed in 55 seconds, 40 seconds of thinking, model already warm from the earlier queries</td></tr>
+    <tr><th>Timeline note</th><td>First access was initially recalled as 6:55 AM; the 5:32 AM timestamp on the first morning response corrected the record. Documented times follow the evidence.</td></tr>
   </table>
-  <div class="status-banner status-pending">Test 16 Result: PENDING</div>
+  <div class="status-banner status-success">Test 16 Result: Remote access succeeded after 6 hours of untouched idle — the Test 14 failure scenario is fixed</div>
 
   <h2 id="server-6" class="chapter">Test 17 — Overnight Endurance <a class="anchor-link" href="#server-6" aria-label="Link to this section">#</a></h2>
   <p>Four hours proves the fix; a full night proves it's infrastructure. Same protocol as Test 16, but with 12+ hours of untouched idle — ideally overnight, ending with a morning access attempt from the iPhone on cellular before anyone has touched the lab.</p>
+  <p><em>Progress notes:</em></p>
+  <ul>
+    <li><em>Night 1 (July 7–8): 6 hours 2 minutes untouched, succeeded (see Test 16).</em></li>
+    <li><em>Night 2 (July 8–9): ~6.5 hours untouched (midnight → 6:25 AM). Node reachable, Open WebUI loaded, chat history rendered — the connectivity fix held for a second consecutive night. The first query returned <strong>"Load failed"</strong>; a retry at 6:40 AM succeeded immediately, and a follow-up prompt completed with 11 seconds of thinking. Diagnosis at the time: a cold-load timeout, assumed to be the model reloading from SSD. A connectivity failure would not have rendered the page at all, and a crashed stack would not have answered the retry — so the connectivity fix plainly held. The <em>cause</em> of the timeout, however, was later revised: Test 20 measured model reload at 4.5 seconds, far too short to explain a timeout. The delay lives in Open WebUI, not Ollama.</em></li>
+    <li><em>A full 12+ hour untouched stretch is still pending.</em></li>
+  </ul>
   <table class="spec-table">
     <tr><th>Idle duration</th><td>PENDING (target: 12+ hours)</td></tr>
     <tr><th><code>ai-lab-b</code> status in Tailscale app</th><td>PENDING</td></tr>
@@ -152,6 +157,19 @@ powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE</div>
   </table>
   <div class="status-banner status-pending">Test 18 Result: PENDING</div>
 
+  <h2 id="server-10" class="chapter">Test 19 — Name-Based Access (MagicDNS) <a class="anchor-link" href="#server-10" aria-label="Link to this section">#</a></h2>
+  <p>With IP-based access proven, this test replaces the memorized Tailscale IP with the machine's name, using Tailscale's MagicDNS (enabled by default on the tailnet).</p>
+  <table class="spec-table">
+    <tr><th>Date / client</th><td>July 8, 2026, 8:41 AM — iPhone on cellular</td></tr>
+    <tr><th>URL tested</th><td><code>http://ai-lab-b:8080</code> — the bare short name, no IP, no FQDN</td></tr>
+    <tr><th>Result</th><td>Open WebUI login page loaded immediately; standard prompt completed in 2:01 with 31 seconds of thinking</td></tr>
+    <tr><th>Fully qualified alternative</th><td><code>http://ai-lab-b.tail20d877.ts.net:8080/</code> — same destination; useful if a client ever fumbles the bare hostname</td></tr>
+    <tr><th>Warm comparison (8:57 AM)</th><td>Same prompt repeated after a short gap: <strong>44 seconds total, 17 seconds thinking</strong> — versus 2:01 on the run an hour earlier.</td></tr>
+    <tr><th>Interpretation at the time</th><td>The ~77-second gap was attributed to Ollama reloading the model from SSD. <strong>Test 20 later measured that reload at 4.5 seconds</strong> and showed the attribution was wrong. See Test 20.</td></tr>
+  </table>
+  <p>Two footnotes for readers. The browser shows <strong>"Not Secure"</strong> because Open WebUI serves plain HTTP — but all traffic between the phone and <code>ai-lab-b</code> travels inside Tailscale's WireGuard tunnel, encrypted end to end; the browser just can't see that. (A future <code>tailscale cert</code> upgrade would serve real HTTPS at the <code>ts.net</code> name and retire the warning.) And publishing the tailnet name here gives an outsider nothing: only devices authenticated into this tailnet can resolve or reach these names.</p>
+  <div class="status-banner status-success">Test 19 Result: MagicDNS short-name access works from cellular — no IP required</div>
+
   <h2 id="server-8" class="chapter">Escalation Path (If Test 16 Fails) <a class="anchor-link" href="#server-8" aria-label="Link to this section">#</a></h2>
   <p>If the node still drops off the tailnet with standby disabled, the next suspects in order:</p>
   <ol>
@@ -164,20 +182,53 @@ powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE</div>
   </ol>
   <p>Each escalation step, if used, gets its own test number and its own before/after entry here.</p>
 
-  <h2 id="server-9" class="chapter">Future Note — Model Keep-Alive <a class="anchor-link" href="#server-9" aria-label="Link to this section">#</a></h2>
-  <p>Observed during the informal 20-minute spot check (July 7): the Open WebUI page loaded immediately, but the standard cat-purring prompt took ~90 seconds to complete while reporting only 14 seconds of thinking. The gap is Ollama's model eviction: by default a model is unloaded from RAM after about 5 minutes without requests, so the first prompt after a quiet stretch pays a cold-start reload from SSD.</p>
-  <p>This is a latency effect, not a connectivity problem — a separate phenomenon from the standby issue this page fixes. The machine stayed reachable; the model just wasn't warm.</p>
-  <p>Planned tuning: extend the keep-alive window to two hours by setting an environment variable on Lab PC 2 before Ollama starts:</p>
-  <div class="code-block">setx OLLAMA_KEEP_ALIVE "2h"
-# then restart Ollama (Stop AI Lab / Start AI Lab)</div>
-  <p>Trade-off: the model stays resident in RAM for the full window. A follow-up mini-test could measure warm vs. cold response time for the same prompt.</p>
+  <h2 id="server-11" class="chapter">Test 20 — Measuring Where the Seconds Actually Go <a class="anchor-link" href="#server-11" aria-label="Link to this section">#</a></h2>
+  <p>By July 10 the pattern was familiar: a query through Open WebUI took roughly a minute, while the model reported only ~30 seconds of thinking. The missing time was assumed to be Ollama reloading <code>qwen3:8b</code> from SSD after its keep-alive eviction. That assumption shaped Tests 17a and 19 and the keep-alive plan below. It had never been measured.</p>
+  <p>Ollama's API already reports the breakdown — <code>load_duration</code>, <code>prompt_eval_duration</code>, <code>eval_duration</code> — but Open WebUI does not surface it. So a small single-file diagnostic page (<code>ollama-timing-bench.html</code>) was written to call <code>/api/generate</code> directly from the iPhone over Tailscale, bypassing Open WebUI entirely, and display the timing fields. It includes a button that unloads the model on demand (<code>keep_alive: 0</code>), so a true cold start can be produced deliberately rather than waited for.</p>
+  <p>Three runs of the standard prompt, from the iPhone, July 10 at 8:54 AM. Run 1 immediately followed a forced unload:</p>
   <table class="spec-table">
-    <tr><th>Status</th><td>PENDING — apply after Tests 16–18 complete, so it doesn't muddy their results</td></tr>
+    <tr><th>Run</th><th>Wall</th><th>Model load</th><th>Prompt eval</th><th>Generation</th><th>Network</th><th>Tok/s</th></tr>
+    <tr><td>1 — cold</td><td>21.8 s</td><td><strong>4.5 s</strong></td><td>0.2 s</td><td>16.9 s</td><td>0.0 s</td><td>14.5</td></tr>
+    <tr><td>2 — warm</td><td>16.6 s</td><td>0.2 s</td><td>0.1 s</td><td>16.3 s</td><td>0.1 s</td><td>14.5</td></tr>
+    <tr><td>3 — warm</td><td>17.2 s</td><td>0.2 s</td><td>0.1 s</td><td>16.8 s</td><td>0.1 s</td><td>14.5</td></tr>
   </table>
+
+  <div class="lessons">
+    <h3>The assumption was wrong</h3>
+    <p><strong>Cold model load costs 4.5 seconds</strong> — not the 77 to 90 seconds attributed to it in Tests 17a and 19. Generation is identical cold or warm (16.3–16.9 s), and throughput is pinned at 14.5 tokens/sec on every run. Network transit across Tailscale, from an iPhone on cellular, costs about a tenth of a second.</p>
+    <p>Ollama's total work on this prompt is roughly 17 seconds warm, 22 seconds cold. Yet the same prompt through Open WebUI took 44 seconds warm and 121 seconds cold. <strong>The overhead is Open WebUI's, not Ollama's, and not Tailscale's.</strong></p>
+    <p>The likely mechanism: Open WebUI fires additional model calls per exchange — chat title generation, tag generation, follow-up suggestions — each a full inference request that never appears in the "thought for N seconds" label. That also explains the "Load failed" timeout in Test 17a: the first request waits behind a queue of them, not behind an SSD read.</p>
+  </div>
+
+  <div class="status-banner status-success">Test 20 Result: Reload measured at 4.5 s — the latency lives in Open WebUI, not model loading</div>
+
+  <h2 id="server-12" class="chapter">What This Changes <a class="anchor-link" href="#server-12" aria-label="Link to this section">#</a></h2>
+  <p>Two conclusions from earlier in this page survive intact, because they rest on the connectivity evidence rather than the latency theory:</p>
+  <ul>
+    <li>The Modern Standby fix works. Remote access survived 6+ hours of untouched idle on two consecutive nights (Tests 16, 17a) after failing reliably at 4 hours before it (Test 14).</li>
+    <li>MagicDNS name-based access works from two client platforms (Tests 19, 17b).</li>
+  </ul>
+  <p>What changes is the diagnosis of slowness. <code>OLLAMA_KEEP_ALIVE=2h</code> is still worth setting — it eliminates a real, if modest, 4.5-second penalty — but it was never going to recover 77 seconds, and it is not the fix for the "Load failed" timeout. The next experiment is to disable Open WebUI's automatic title, tag, and follow-up generation (Admin Settings → Interface) and re-run the standard prompt through the chat UI. If the total drops from ~44 seconds toward the bench's ~17, the mechanism is confirmed.</p>
+
+  <h2 id="server-9" class="chapter">Configuration Applied — Model Keep-Alive <a class="anchor-link" href="#server-9" aria-label="Link to this section">#</a></h2>
+  <p>Applied July 10 on Lab PC 2, along with the two variables the timing bench requires:</p>
+  <div class="code-block">setx OLLAMA_KEEP_ALIVE "2h"
+setx OLLAMA_HOST "0.0.0.0"
+setx OLLAMA_ORIGINS "*"
+# then restart Ollama; setx affects only newly launched processes</div>
+  <p>A caution learned the hard way: <code>setx</code> writes to the user environment but does not touch running processes. The Start AI Lab script had already launched Ollama, which kept the old five-minute keep-alive until the stack was restarted. <code>ollama ps</code> shows the truth — its <code>UNTIL</code> column reads "2 hours from now" once the setting is live.</p>
+  <p><code>OLLAMA_HOST=0.0.0.0</code> widens what Ollama listens on. It remains unreachable from the public internet: the API is behind Windows Firewall and only addressable through the tailnet.</p>
 
   <h2>Lessons Learned</h2>
   <ol>
-    <li>PENDING — to be filled in after Tests 16–18 complete.</li>
+    <li>A SleepStudy baseline turns a hunch into evidence: 77 standby sessions, 122.6 hours, and <em>zero</em> network wakes proved that inbound requests were never a wake candidate at the OS level.</li>
+    <li>On Modern Standby hardware, display sleep and system sleep are separate settings, and the machine followed the display down within a median of 17 seconds. Decoupling them (<code>standby-timeout-ac 0</code> plus <code>monitor-timeout-ac 10</code>) is the whole fix.</li>
+    <li>Repeating the exact protocol that produced a failure is the only convincing proof of a fix. Test 16 was Test 14 with one variable changed.</li>
+    <li>A page that renders but will not answer is a different failure from a page that will not load. Test 17a's "Load failed" looked like a relapse and was not — the connectivity fix had held.</li>
+    <li>Timestamps beat recollection. The first morning access was remembered as 6:55 AM; the chat timestamp said 5:32 AM, and the log follows the timestamp.</li>
+    <li><strong>An unmeasured cause is a guess, however confident.</strong> For three days the cold/warm gap was attributed to model reload. Measured directly, reload costs 4.5 seconds; the missing 77 belonged to Open WebUI. The instrument that settled it took less time to build than the theory took to become received wisdom.</li>
+    <li>Measure at the layer you suspect. Ollama had been reporting <code>load_duration</code> all along — the number was one API call away, hidden only because the front end never displayed it.</li>
+    <li><code>setx</code> does not change running processes. A restart is part of the configuration change, not an afterthought.</li>
   </ol>
 
   <h2>What's Next</h2>
@@ -190,7 +241,7 @@ powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE</div>
   </div>
 
   <p><a href="reliable-remote-access.html">← Part 3: Reliable Remote Access</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
-  <div class="status-banner status-pending">Always-On Server Conversion: Tests In Progress</div>
+  <div class="status-banner status-success">Always-On Server Conversion: Modern Standby fixed and verified · Latency root cause reassigned to Open WebUI · Tests 17 (12 h) and 18 (reboot) still open</div>
 
 </div>
 
