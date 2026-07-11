@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local LLM Field Guide — Part 5 — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Local LLM Field Guide — Part 5</h1>
+  <div class="subtitle">Where the Seconds Go — Isolating Open WebUI's Overhead</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="always-on-server.html">← Part 4: Always-On Server</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <div class="status-banner status-pending">This page is a live document. Findings current as of 2026-07-10 (Tests 20 &amp; 21). Test 22 (Task Model alternative) is still open.</div>
+
+  <p>Part 4 fixed <em>whether</em> Lab PC 2 stays reachable after extended idle. This page answers a different complaint that surfaced along the way: even when reachable, a phone query through Open WebUI takes about a minute while the model itself reports only ~30 seconds of thinking. Where does the rest go?</p>
+
+  <div class="lessons">
+    <h3>Core distinction</h3>
+    <p><strong>Part 4 = the server stays reachable.</strong></p>
+    <p><strong>Part 5 = the response stops feeling slow, and the reason why is measured, not guessed.</strong></p>
+    <p>Earlier drafts of Part 4 blamed the cold/warm gap on Ollama reloading the model from SSD. That theory was never measured before it was written down — this page is the record of measuring it, and of the correction that followed.</p>
+  </div>
+
+  <h2 id="part5-1" class="chapter">The Two Paths <a class="anchor-link" href="#part5-1" aria-label="Link to this section">#</a></h2>
+  <p>To find out where the missing seconds were going, a small diagnostic bench (<code>ollama-timing-bench.html</code>) was built to call Ollama's <code>/api/generate</code> endpoint directly from the iPhone over Tailscale — the same network path as the chat UI, but with Open WebUI removed from the equation entirely.</p>
+
+  <figure class="img-70">
+    <a href="../images/test-20-chat-path-vs-measurement-path.png" target="_blank" rel="noopener">
+      <img src="../images/test-20-chat-path-vs-measurement-path.png" alt="Diagram comparing the Chat Path through Open WebUI at about 44 seconds against the Measurement Path bypassing Open WebUI at about 17 seconds">
+    </a>
+    <figcaption>Chat Path (through Open WebUI) ≈44 s vs. Measurement Path (bypassing Open WebUI) ≈17 s — both warm, single runs (Test 20).</figcaption>
+  </figure>
+  <p>The gap between the two panels — about 27 seconds — is what pointed the investigation at Open WebUI rather than at Ollama or the network. Ollama's API already reports <code>load_duration</code>, <code>prompt_eval_duration</code>, and <code>eval_duration</code>, but Open WebUI's chat interface never surfaces them, which is exactly why a separate instrument was needed to see them at all.</p>
+
+  <h2 id="part5-2" class="chapter">What the Bench Measured — Test 20 <a class="anchor-link" href="#part5-2" aria-label="Link to this section">#</a></h2>
+  <p>Three runs of the standard prompt ("Answer in one sentence only: why do cats purr?"), from the iPhone, July 10. Run 1 immediately followed a forced model unload to guarantee a true cold start:</p>
+  <table class="spec-table">
+    <tr><th>Run</th><th>Wall</th><th>Model load</th><th>Prompt eval</th><th>Generation</th><th>Network</th><th>Tok/s</th></tr>
+    <tr><td>20a — cold</td><td>21.8 s</td><td><strong>4.5 s</strong></td><td>0.2 s</td><td>16.9 s</td><td>0.0 s</td><td>14.5</td></tr>
+    <tr><td>20b — warm</td><td>16.6 s</td><td>0.2 s</td><td>0.1 s</td><td>16.3 s</td><td>0.1 s</td><td>14.5</td></tr>
+    <tr><td>20c — warm</td><td>17.2 s</td><td>0.2 s</td><td>0.1 s</td><td>16.8 s</td><td>0.1 s</td><td>14.5</td></tr>
+  </table>
+  <div class="lessons">
+    <h3>The assumption was wrong</h3>
+    <p><strong>Cold model load costs 4.5 seconds (Test 20a)</strong> — not the 77–90 seconds earlier drafts attributed to it. Generation time is identical cold or warm (16.3–16.9 s, Tests 20a–c), and throughput holds at 14.5 tokens/sec on every run. Network transit over Tailscale from an iPhone on cellular costs roughly a tenth of a second.</p>
+    <p>Ollama's total work on this prompt is ≈17 s warm, ≈22 s cold (Test 20). The same prompt through Open WebUI ran ≈44 s warm and ≈121 s cold (Part 4, Tests 19/20). <strong>The overhead lives in Open WebUI, not in Ollama and not in Tailscale.</strong></p>
+  </div>
+  <div class="status-banner status-success">Test 20 Result: Cold model load measured at 4.5 s — the ~77 s cold/warm gap does not come from model reload</div>
+
+  <h2 id="part5-3" class="chapter">Where the Overhead Actually Goes — Test 21 <a class="anchor-link" href="#part5-3" aria-label="Link to this section">#</a></h2>
+  <p>Test 20 showed where the missing time <em>wasn't</em>. Test 21 tested the leading suspect: Open WebUI fires its own automatic model calls per exchange — chat title generation, tag generation, and follow-up-question generation — each one a full <code>qwen3:8b</code> inference that never appears in the chat UI's "thought for N seconds" label.</p>
+
+  <figure class="img-70">
+    <a href="../images/test-21-llm-overhead-calls.png" target="_blank" rel="noopener">
+      <img src="../images/test-21-llm-overhead-calls.png" alt="Diagram showing Open WebUI's background Title, Tags, and Follow-Up calls stacking on top of the chat response when features are enabled, versus a single clean path when they are disabled">
+    </a>
+    <figcaption>Background features enabled — three separate full-model calls (Title, Tags, Follow-Up) stack on top of every exchange — vs. disabled, a single clean path. Median of 6 runs, HP Edge (Test 21).</figcaption>
+  </figure>
+  <p>Each of those three features is its own complete LLM call — one user question quietly becomes four separate inference runs on the same single-threaded local model, all queued behind each other. That queuing also explains the "Load failed" timeout seen back in Test 17a: the first real request was waiting behind background calls, not behind a slow disk.</p>
+
+  <h2 id="part5-4" class="chapter">The Toggle Test — Result <a class="anchor-link" href="#part5-4" aria-label="Link to this section">#</a></h2>
+  <p>Method: HP desktop, Edge, one browser, standard prompt, a fresh chat for every run, model kept warm throughout. Baseline with Title, Tags, and Follow-Up all switched on, then all three switched off (Admin → Settings → Interface).</p>
+  <table class="spec-table">
+    <tr><th>Condition</th><th>Thinking</th><th>Total (median)</th><th>Overhead</th><th>Variance</th></tr>
+    <tr><td>Features ON (Title + Tags + Follow-Up, all on <code>qwen3:8b</code>)</td><td>11–13 s</td><td>~58 s</td><td>18–86 s</td><td>wild</td></tr>
+    <tr><td>Features OFF</td><td>~11 s</td><td>~13 s</td><td>~2 s</td><td>gone</td></tr>
+  </table>
+  <div class="lessons">
+    <h3>The decisive detail is the shape, not just the average</h3>
+    <p>Thinking time stayed rock-steady at ~12 seconds in <em>both</em> conditions — the model itself never varied. All of the overhead, and all of the run-to-run variance, lived in the background calls. Turning them off collapsed the total to the Ollama floor (~13 s, matching Test 20's warm measurement) <strong>and</strong> removed the swing entirely.</p>
+    <p>Honest caveat: the first 1–2 runs immediately after saving the setting were still slow (39 s, 52 s) — likely a queued background task draining, or the setting propagating — before the effect fully settled. Later runs were consistently ~13 s.</p>
+  </div>
+  <div class="status-banner status-success">Test 21 Result: Disabling Title/Tags/Follow-Up collapsed the chat path from ~58 s median to ~13 s median, and eliminated the run-to-run variance</div>
+
+  <h2 id="part5-5" class="chapter">Result and Tuned Path <a class="anchor-link" href="#part5-5" aria-label="Link to this section">#</a></h2>
+  <p>Confirmed: the tuned chat path runs ≈13 s (median, Test 21), down from ≈58 s (median, Test 21) — roughly a 45-second reduction, and the latency is now predictable instead of swinging between 18 and 86 seconds. The fix adopted was to leave Title, Tags, and Follow-Up switched off, at the cost of losing those three conveniences.</p>
+  <p><strong>Not yet tested — Test 22:</strong> pointing Open WebUI's Task Model (Admin → Interface → Task Model) at a small model, such as <code>qwen3:0.6b</code>, instead of the full <code>qwen3:8b</code>, could in principle keep automatic titles/tags/follow-ups while cutting their cost. This is an untested idea, not a recommendation — it has no measurement behind it yet and should not be treated as the plan until Test 22 actually runs it.</p>
+
+  <h2 id="part5-6" class="chapter">Reconciling the Two Figures' Numbers <a class="anchor-link" href="#part5-6" aria-label="Link to this section">#</a></h2>
+  <div class="lessons">
+    <p>Figure 1 (above, Test 20) uses <strong>44 s / 17 s</strong> — single runs, iPhone, Ollama bench vs. chat UI. Figure 2 (above, Test 21) uses <strong>58 s / 13 s</strong> — medians of six runs, HP desktop on Edge, chat UI only, comparing features on vs. off. These are two different measurement methods answering two different questions, not a contradiction: Test 20 isolates Ollama's own time; Test 21 isolates the effect of one specific fix. Each figure's caption names its own test — read the numbers against the test that produced them, not against each other.</p>
+  </div>
+
+  <h2>Lessons Learned</h2>
+  <ol>
+    <li>Measure at the layer you suspect — Ollama had been reporting <code>load_duration</code> all along; the number was one API call away, hidden only because the chat front end never displayed it.</li>
+    <li>An unmeasured cause is a guess, however confident. The cold/warm gap was attributed to model reload for days; measured directly, reload costs 4.5 seconds, and the missing ~77 seconds belonged to Open WebUI instead.</li>
+    <li>The overhead was never the model and never the network — it was the front end doing invisible extra inference. A steady thinking-time next to a wildly varying total is the signature of background tasks queuing against a single-threaded local model.</li>
+  </ol>
+
+  <h2>What's Next</h2>
+  <div class="grid">
+    <a class="card" href="always-on-server.html">
+      <h2>Back to Part 4</h2>
+      <p>Always-On Server — the Modern Standby fix and the tests that proved reachability survives extended idle.</p>
+      <span class="card-link">Read →</span>
+    </a>
+    <a class="card" href="test-log.html">
+      <h2>Reference: Test Log</h2>
+      <p>Every remote-access and reliability test, numbered and dated — including Tests 20 and 21 behind this page.</p>
+      <span class="card-link">Open →</span>
+    </a>
+  </div>
+
+  <p><a href="always-on-server.html">← Part 4: Always-On Server</a> &nbsp;·&nbsp; <a href="test-log.html">Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+  <div class="status-banner status-pending">Where the Seconds Go: Live document — findings current as of 2026-07-10 (Tests 20 &amp; 21) · Test 22 (Task Model alternative) not yet tested</div>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
