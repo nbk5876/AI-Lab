@@ -47,7 +47,9 @@
 
   <div class="lessons">
     <h3>Scope</h3>
-    <p>This page documents the working mobile access path using Tailscale. The iPhone does not connect directly to Node A through its local LAN address. Instead, the iPhone reaches Node A through the Tailscale tailnet, using Node A's Tailscale IP address.</p>
+    <p>This page documents the working mobile access path using Tailscale.</p>
+    <p>Tailscale is a mesh VPN — it creates a private, encrypted network (a "tailnet") between devices, no matter where each one physically is. Every device that joins gets its own stable address on that private network, and can reach every other device on it directly, as if they were all sitting on the same LAN. We're using it here because the lab's nodes and the phones that need to reach them aren't on the same physical network: Node A sits on the condo Wi-Fi, while a phone might be on cellular data, a coffee shop's Wi-Fi, or anywhere else. Tailscale bridges that gap without exposing Open WebUI to the open internet or requiring router port-forwarding.</p>
+    <p>The iPhone does not connect directly to Node A through its local LAN address. Instead, the iPhone reaches Node A through the Tailscale tailnet, using Node A's Tailscale IP address.</p>
     <p>Working path:</p>
     <div class="code-block">iPhone → Cellular or Wi-Fi Internet → Tailscale Tailnet → Node A → Open WebUI</div>
     <p>Access URL:</p>
