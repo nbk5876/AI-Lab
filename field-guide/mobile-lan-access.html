@@ -51,8 +51,8 @@
     <p>Working path:</p>
     <div class="code-block">iPhone → Cellular or Wi-Fi Internet → Tailscale Tailnet → Node A → Open WebUI</div>
     <p>Access URL:</p>
-    <div class="code-block">http://100.115.162.13:8080</div>
-    <p>Node A still has LAN IP <code>192.168.88.239</code>, but that address is documented only as its local network address, not the mobile access path.</p>
+    <div class="code-block">http://ai-lab-b:8080</div>
+    <p>Tailscale MagicDNS now resolves the <code>ai-lab-b</code> hostname directly, so the raw Tailscale IP (<code>100.115.162.13:8080</code>) no longer needs to be memorized or bookmarked — the hostname works from any device on the tailnet. Node A still has LAN IP <code>192.168.88.239</code>, but that address is documented only as its local network address, not the mobile access path.</p>
   </div>
 
   <h2 id="mobile-1" class="chapter">Goal <a class="anchor-link" href="#mobile-1" aria-label="Link to this section">#</a></h2>
@@ -360,8 +360,8 @@ curl http://localhost:8080
   </div>
 
   <h2 id="mobile-18" class="chapter">Security Note <a class="anchor-link" href="#mobile-18" aria-label="Link to this section">#</a></h2>
-  <p>Safari flags the connection as "Not Secure" because Open WebUI is served over plain HTTP, not HTTPS — <code>http://100.115.162.13:8080</code> is a raw IP address with no TLS certificate behind it. The traffic itself isn't unprotected, though: Tailscale encrypts the device-to-device tunnel itself, so the connection is private between the iPhone and Node A even without HTTPS layered on top.</p>
-  <p>A cleaner long-term fix would be HTTPS, or a MagicDNS-friendly hostname instead of a raw IP — future work, not required for this to function today.</p>
+  <p>Safari flags the connection as "Not Secure" because Open WebUI is served over plain HTTP, not HTTPS — whether reached via the raw IP or the <code>ai-lab-b</code> MagicDNS hostname, there's no TLS certificate behind it. The traffic itself isn't unprotected, though: Tailscale encrypts the device-to-device tunnel itself, so the connection is private between the iPhone and Node A even without HTTPS layered on top.</p>
+  <p>A cleaner long-term fix would still be HTTPS — the MagicDNS hostname (<code>ai-lab-b</code>) is now in use in place of the raw IP, resolving the naming half of this note.</p>
 
   <h2>What's Next</h2>
   <div class="grid">
