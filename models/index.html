@@ -35,7 +35,7 @@
   <table class="spec-table">
     <tr><th>Model</th><th>Size</th><th>Role</th><th>Status</th></tr>
     <tr><td>Qwen2.5-Coder</td><td>14B</td><td>Coding-oriented</td><td>Running on Node A</td></tr>
-    <tr><td>Qwen3</td><td>8B / 14B</td><td>General conversational</td><td>Planned next</td></tr>
+    <tr><td>Qwen3</td><td>8B</td><td>General conversational</td><td>Running on Node A</td></tr>
     <tr><td>"Gwen"</td><td>—</td><td>General chat</td><td>Running on Node B</td></tr>
   </table>
 
@@ -46,8 +46,9 @@
     Coder models aren't automatically good everyday chatbots. Different jobs call for differently-tuned models.
   </div>
 
-  <h2>Next up: a conversational model</h2>
-  <p>To get a more natural chat experience in Open WebUI, the plan is to pull down <code>qwen3:8b</code> or <code>qwen3:14b</code> — both general-purpose conversational models, sized to run comfortably on the Beelink's 32 GB of RAM.</p>
+  <h2>Qwen3:8b — the everyday conversational model</h2>
+  <p><code>qwen3:8b</code> is now the default general-purpose chat model on Node A, sized to run comfortably on the Beelink's 32 GB of RAM. <code>qwen3:14b</code> remains an option if more headroom is ever needed.</p>
+  <p>See a <a href="qwen3-sample-conversation.html">sample conversation with qwen3:8b</a> — general trivia, a creative-writing test, and the model reasoning through some real Open WebUI tool calls.</p>
 
   <h2>Choosing a model size</h2>
   <p>Rough guidance for hardware like the Beelink SER9 (32 GB RAM, no discrete GPU):</p>
