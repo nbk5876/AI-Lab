@@ -58,8 +58,21 @@
     Two machines on two different home networks can't see each other by IP address alone — that's exactly what Tailscale solves. Both nodes are now confirmed on the same tailnet (rather than relying on port-forwarding or direct SSH across networks) — though Node A briefly ended up on the wrong tailnet before that got sorted out, see <a href="../field-guide/mobile-lan-access.html#mobile-17">Tailscale Account / Tailnet Lessons</a>.
   </div>
 
-  <h2>Where Claude Code fits</h2>
+  <h2 id="where-claude-code-fits" class="chapter">Where Claude Code fits <a class="anchor-link" href="#where-claude-code-fits" aria-label="Link to this section">#</a></h2>
   <p>Claude Code acts as the engineering assistant for the lab itself — installing software, writing documentation, building this very site, and keeping the <a href="../build-journal/index.html">Build Journal</a> and Engineering Notebook up to date as the lab grows.</p>
+
+  <p>As of July 12, 2026, there are two separate Claude Code instances running: one on Tony's everyday HP desktop, and a second installed directly on Node A (<code>ai-lab-b</code>) itself, alongside the Ollama LLM it manages there.</p>
+
+  <figure class="img-60">
+    <a href="../images/cc1-cc2-sync-concept.png" target="_blank" rel="noopener">
+      <img src="../images/cc1-cc2-sync-concept.png" alt="Diagram of Claude Code 1 on the HP Desktop and Claude Code 2 on Lab PC 2 (Node A) connected by an Async link, with Claude Code 2 configuring both OS Settings and the Ollama LLM on the same machine">
+    </a>
+    <figcaption>Two Claude Code instances, one shared async channel — Lab PC 2 is Node A</figcaption>
+  </figure>
+
+  <p>The two instances hand off messages through <code>cc-sync</code>, a plain-text folder shared over OneDrive rather than a live network connection — which is why the diagram labels that link <strong>Async</strong>, not Sync. Each instance polls the folder on an hourly local loop (plus ad hoc checks on request) and follows the same rule on both sides: read a new file, understand what it's asking, prepare a plan — then stop and wait for a human go-ahead before acting or replying.</p>
+
+  <p>Async also matches how Tony actually works day to day: he drives the lab primarily through Claude Code 1 on the HP desktop — the "architect" assistant for planning and documentation — rather than having to hold the same conversation twice with two different assistants in real time. Claude Code 2 stays close to Node A itself, checking and adjusting OS-level parameters directly on that machine, and reports back through the shared folder when Tony has something for it or wants a status check.</p>
 
 </div>
 
