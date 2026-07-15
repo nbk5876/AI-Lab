@@ -63,16 +63,18 @@
 
   <p>As of July 12, 2026, there are two separate Claude Code instances running: one on Tony's everyday HP desktop, and a second installed directly on Node A (<code>ai-lab-b</code>) itself, alongside the Ollama LLM it manages there.</p>
 
-  <figure class="img-60">
-    <a href="../images/cc1-cc2-sync-concept.png" target="_blank" rel="noopener">
-      <img src="../images/cc1-cc2-sync-concept.png" alt="Diagram of Claude Code 1 on the HP Desktop and Claude Code 2 on Lab PC 2 (Node A) connected by an Async link, with Claude Code 2 configuring both OS Settings and the Ollama LLM on the same machine">
+  <figure class="img-wide">
+    <a href="../images/claude-code-lab-loop-overview.png" target="_blank" rel="noopener">
+      <img src="../images/claude-code-lab-loop-overview.png" alt="Diagram of the AI Lab's request and configuration loop: Tony at the HP Desktop sends prompts to Claude Code CC1, and separately consults Claude in the Cloud. CC1 and Claude Code CC2 on Lab PC 2 (Node A) exchange messages through an async shared-folder channel. On Node A, CC2 configures Power and Environment Settings, Open WebUI, and the qwen3 LLM. Open WebUI communicates with the qwen3 LLM directly. Tony's mobile phone connects two ways: AI Prompts to Open WebUI, and CC2 Prompts directly to Claude Code CC2.">
     </a>
-    <figcaption>Two Claude Code instances, one shared async channel — Lab PC 2 is Node A</figcaption>
+    <figcaption>The full lab loop, at a glance — request paths, config relationships, and mobile access</figcaption>
   </figure>
 
   <p>The two instances hand off messages through <code>cc-sync</code>, a plain-text folder shared over OneDrive rather than a live network connection — which is why the diagram labels that link <strong>Async</strong>, not Sync. Each instance polls the folder on an hourly local loop (plus ad hoc checks on request) and follows the same rule on both sides: read a new file, understand what it's asking, prepare a plan — then stop and wait for a human go-ahead before acting or replying.</p>
 
   <p>Async also matches how Tony actually works day to day: he drives the lab primarily through Claude Code 1 on the HP desktop — the "architect" assistant for planning and documentation — rather than having to hold the same conversation twice with two different assistants in real time. Claude Code 2 stays close to Node A itself, checking and adjusting OS-level parameters directly on that machine, and reports back through the shared folder when Tony has something for it or wants a status check.</p>
+
+  <p>The diagram also shows two paths not covered above. Tony separately consults <strong>Claude in the Cloud</strong> for some work, independent of either local instance. And his phone reaches Node A two distinct ways: <strong>AI Prompts</strong> to Open WebUI for chatting with the qwen3 LLM directly (see the Field Guide's <a href="../field-guide/mobile-lan-access.html">Mobile Access</a> page), and <strong>CC2 Prompts</strong> — a live connection straight to Claude Code CC2 itself, using Claude Code's built-in Remote Control feature, set up the same day this diagram was made.</p>
 
 </div>
 

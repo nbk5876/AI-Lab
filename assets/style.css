@@ -337,6 +337,18 @@ figure a img { cursor: zoom-in; }
 figure.img-60 img { max-width: 60%; margin: 0 auto; }
 figure.img-42 img { max-width: 42%; margin: 0 auto; }
 figure.img-25 img { max-width: 25%; margin: 0 auto; }
+
+/* Wide figure — breaks out of the 900px container for large diagrams,
+   only on screens with room for it; falls back to normal responsive
+   figure behavior below that. */
+@media (min-width: 1100px) {
+  figure.img-wide {
+    width: 1050px;
+    max-width: 1050px;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+}
 figcaption {
   font-family: Arial, sans-serif;
   font-size: 0.8rem;
