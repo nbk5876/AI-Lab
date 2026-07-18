@@ -64,11 +64,18 @@
   <p>As of July 12, 2026, there are two separate Claude Code instances running: one on Bryan's everyday HP desktop, and a second installed directly on Node A (<code>ai-lab-b</code>) itself, alongside the Ollama LLM it manages there.</p>
 
   <figure class="img-wide">
-    <a href="../images/claude-code-lab-loop-overview.png" target="_blank" rel="noopener">
-      <img src="../images/claude-code-lab-loop-overview.png" alt="Diagram of the AI Lab's request and configuration loop: Bryan at the HP Desktop sends prompts to Claude Code CC1, and separately consults Claude in the Cloud. CC1 and Claude Code CC2 on Lab PC 2 (Node A) exchange messages through an async shared-folder channel. On Node A, CC2 configures Power and Environment Settings, Open WebUI, and the qwen3 LLM. Open WebUI communicates with the qwen3 LLM directly. Bryan's mobile phone connects two ways: AI Prompts to Open WebUI, and CC2 Prompts directly to Claude Code CC2.">
+    <a href="../images/AI-Lab.png" target="_blank" rel="noopener">
+      <img src="../images/AI-Lab.png" alt="Diagram of the AI Lab's request and configuration loop, numbered 1 through 4: Bryan at the HP Desktop sends prompts to (2) Claude Code CC1, and separately consults (1) Claude in the Cloud. CC1 and (3) Claude Code CC2 on Lab PC 2 (Node A) exchange messages through an async shared-folder channel. On Node A, CC2 configures Power and Environment Settings, Open WebUI, and the (4) qwen3 LLM. Open WebUI communicates with the qwen3 LLM directly. Bryan's mobile phone connects two ways: AI Prompts to Open WebUI, and CC2 Prompts directly to Claude Code CC2.">
     </a>
     <figcaption>The full lab loop, at a glance — request paths, config relationships, and mobile access</figcaption>
   </figure>
+
+  <ol>
+    <li><strong>[1] Claude in the Cloud</strong> — consulted separately by Bryan for some work, independent of either local Claude Code instance.</li>
+    <li><strong>[2] Claude Code CC1</strong> — runs on the HP Desktop (HP Core7), the "architect" instance Bryan drives day to day for planning and documentation.</li>
+    <li><strong>[3] Claude Code CC2</strong> — runs on Lab PC 2 / Node A (Beelink SER9), configuring Power/Environment Settings and Open WebUI directly on that machine.</li>
+    <li><strong>[4] qwen3 LLM</strong> — the local model on Node A, served through Open WebUI and reachable from Bryan's mobile phone via AI Prompts.</li>
+  </ol>
 
   <p>The two instances hand off messages through <code>cc-sync</code>, a plain-text folder shared over OneDrive rather than a live network connection — which is why the diagram labels that link <strong>Async</strong>, not Sync. Each instance polls the folder on an hourly local loop (plus ad hoc checks on request) and follows the same rule on both sides: read a new file, understand what it's asking, prepare a plan — then stop and wait for a human go-ahead before acting or replying.</p>
 
