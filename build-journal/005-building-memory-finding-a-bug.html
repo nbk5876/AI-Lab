@@ -60,6 +60,7 @@
   <h2>Where It Stands</h2>
   <div class="status-banner status-pending">Open WebUI in-thread memory bug: DIAGNOSED, fix not yet applied</div>
   <p>The standalone script from Part 1 works as a stopgap outside Open WebUI's own interface in the meantime. Confirming and fixing the underlying Open WebUI behavior is ongoing.</p>
+  <p><em>Update: the diagnosis above didn't hold up under closer inspection — see <a href="006-the-bug-wasnt-where-we-thought.html">Build Journal #006</a> for what a live request capture actually found.</em></p>
 
   <h2>Primary Lesson</h2>
   <p>Three plausible theories got ruled out one at a time by direct checks, but none of them were what actually proved the bug — an identical number showing up twice in a row is what did. That's the same discipline that turned up the wrong-tailnet mixup back in <a href="003-mobile-access-take-two-tailscale.html">Build Journal #003</a>: when something looks fine on the surface, find the one piece of evidence that can't lie, rather than trusting the plausible-sounding theory.</p>

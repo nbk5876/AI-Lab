@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Journal #006 — The Bug Wasn't Where We Thought — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Build Journal #006 — The Bug Wasn't Where We Thought</h1>
+  <div class="subtitle">July 14–15, 2026</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Back to Build Journal</a></p>
+
+  <p><a href="005-building-memory-finding-a-bug.html">Build Journal #005</a> ended with a diagnosis: Open WebUI's own history-reconstruction code, meant to handle reasoning-model output, looked like the likely cause of the in-thread memory bug. It was a reasonable read of the evidence available at the time. It also turned out to be wrong.</p>
+
+  <h2>The Live Capture</h2>
+  <p>To settle it properly, the real Ollama server was temporarily moved off its usual port and a small logging proxy put in its place — invisible to Open WebUI, which kept talking to the same address the whole time, now just relaying through the proxy instead. Then the actual two-message repro got run through Open WebUI's browser interface, as a real request rather than a synthetic test.</p>
+  <p>The captured request settled it: all three messages — the "I really like Russian" statement, the model's reply, and the "what's my favorite language?" follow-up — arrived at Ollama complete, correctly ordered, nothing missing or empty. Open WebUI was sending the full conversation history correctly. This was never a transmission bug.</p>
+
+  <h2>Revised Diagnosis</h2>
+  <p>The actual cause: qwen3:8b's own response behavior when a large memory/notes tool list — roughly 32 functions, automatically attached whether or not anyone asked for a lookup — is available to it. Faced with a "what's my favorite X" question, the model appears to treat it as something that needs to go through those tools specifically, and answers as if it has no memory at all, even when the answer is sitting in plain sight one turn back. It reads like a trained caution pattern about claiming persistent knowledge of the user, one that ends up overriding ordinary use of the conversation already in front of it.</p>
+
+  <h2>Two Fix Attempts, Neither Clean</h2>
+  <p>First attempt: a short system prompt instructing the model to check the visible conversation before deferring to memory tools. Result: worse in a specific, telling way — the model now asked for a "note ID," explicit tool-deflection language that hadn't appeared before.</p>
+  <p>Second attempt: leave the system prompt out and instead scope down the tool list directly — disable just Memory, Notes, Tasks, and Automations, leave everything else (Web Search, Knowledge Base, Chat History, and more) enabled. Result: better. The explicit "note ID" language disappeared. But the model still opened with a hedge and didn't clearly connect "Russian" back to what had actually been said — weaker than a control test with every tool switched off entirely.</p>
+
+  <h2>Learning to Trust the Sample Size</h2>
+  <p>Chasing that partial result further meant testing more tool-scoping variants — v1, v2, v3, each disabling a slightly different set — five trials per config. The pattern that came back didn't make sense: v2 (more tools disabled than v1) scored worse than v1, and v3 (more disabled than v2) scored better than both. Pass rates weren't moving in a straight line as more tools came off. Five trials per config, it turned out, wasn't enough to tell a real trend from ordinary run-to-run noise — and once that was suspected, it needed to be tested properly rather than argued about.</p>
+
+  <h2>The Real Signal</h2>
+  <p>The fix that actually worked wasn't more tool-scoping — it was a single few-shot example added to the system prompt: a short demonstration conversation about a completely unrelated topic (hiking, not Russian), showing the model what "answer from context instead of deflecting" looks like. Tested properly this time, at fifteen trials instead of five:</p>
+  <div class="status-banner status-pending">v1 baseline, re-measured at N=15: 4/15 (27%) — far weaker than the "80%" it had looked like at N=5</div>
+  <div class="status-banner status-success">v1 + few-shot example, N=15: 15/15 (100%) — every trial correctly attributed Russian to what was said earlier, zero hedge phrases</div>
+  <p>That's not a close call the way the tool-scoping numbers were. It's a large, unambiguous gap, and the strongest result of the investigation so far.</p>
+
+  <h2>What This Doesn't Prove Yet</h2>
+  <p>The 100% result is on one specific, fixed repro — the same Russian-language question used throughout this entire investigation. It hasn't yet been tried against a different topic or a longer conversation to see how far the fix generalizes, and it hasn't been deployed as the default configuration anyone actually chats with day to day. Both are open questions, not settled ones.</p>
+
+  <h2>Primary Lesson</h2>
+  <p>The tool-scoping investigation looked like it was working, right up until it was measured at three times the sample size — at which point the appearance of progress mostly evaporated. Five trials told a story that fifteen trials didn't support. That's worth remembering as its own category of mistake, distinct from the "everything looks fine, but it isn't" pattern from <a href="003-mobile-access-take-two-tailscale.html">Build Journal #003</a>: this one wasn't a hidden failure, it was a real signal that just wasn't strong enough yet to trust.</p>
+
+  <h2>What's Next</h2>
+  <p>The investigation continued past this point — testing whether the fix holds up outside this one exact scenario turned out to be its own, more complicated story. That part isn't finished being written yet.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
