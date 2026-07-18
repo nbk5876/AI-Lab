@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Journal #005 — Building Memory, Finding a Bug — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Build Journal #005 — Building Memory, Finding a Bug</h1>
+  <div class="subtitle">July 13–14, 2026</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Back to Build Journal</a></p>
+
+  <p><a href="004-two-claude-codes-one-shared-folder.html">Build Journal #004</a> left cc-sync confirmed but untested — a channel with nothing real running through it yet. That changed almost immediately: qwen3:8b, running through Open WebUI on Node A, seemed to have no memory within a single conversation. This became the channel's first real multi-round work cycle — CC1 writing the spec and reviewing, CC2 building and investigating.</p>
+
+  <h2>The Gotcha Worth Catching Early</h2>
+  <p>Before writing anything, CC1 researched qwen3:8b's actual context window. Its model card lists 32,768 tokens natively — but Ollama's runtime default is only <strong>4,096 tokens</strong> regardless of what the model supports, unless <code>num_ctx</code> is passed explicitly on every request. Missing that would have silently undercut any memory fix before it started.</p>
+
+  <h2>Part 1: A Standalone Memory Script</h2>
+  <p>The spec called for a Python script wrapping Ollama's <code>/api/chat</code> endpoint: a JSON history file in Ollama's own message format, real token counts pulled straight from Ollama's own <code>prompt_eval_count</code>/<code>eval_count</code> fields rather than estimated, oldest-first truncation with the system message always pinned in place, and a configurable token budget.</p>
+  <p>CC2 built it (<code>num_ctx=8192</code>, 6,000-token budget) and tested it with a 4-turn conversation deliberately built to create ambiguity — "favorite programming language" versus, later, "favorite language" meaning a spoken language. The model resolved the ambiguity correctly, with visible reasoning proving it was actually tracking context rather than just matching keywords.</p>
+  <p>One detour along the way: Node A turned out to have no real Python install, only the Windows Store stub. The official installer failed silently twice before an elevated manual run finally succeeded — worth remembering if this needs doing again on a fresh machine.</p>
+
+  <h2>The Review Round</h2>
+  <p>CC1's review of the script caught three things: the model's own internal reasoning text was being saved into history and resent every turn, silently eating into the token budget; the truncation path had never actually been exercised by a real test; and the history file's location was needlessly computed instead of being a plain, readable constant. CC2's follow-up fixed all three — including deliberately shrinking the token budget until truncation actually fired, to prove it worked rather than just assuming it would.</p>
+  <div class="status-banner status-success">Standalone memory script: DONE</div>
+
+  <h2>Part 2: The Question That Actually Mattered</h2>
+  <p>The standalone script solved an adjacent problem — the real complaint was Open WebUI's own chat interface. Asking "I really like the Russian language" and then, in the same thread, "what is my favorite language?" got back <em>"I don't have access to your personal preferences or data,"</em> as if the first message had never been sent.</p>
+
+  <h2>What Got Ruled Out</h2>
+  <p>CC2's investigation was read-only throughout — no production settings touched. Three theories fell, one at a time: no hidden system prompt is telling the model it has no memory (checked directly; none exists). It isn't a context-length problem (actual usage was nowhere near the 4,096-token default ceiling). And it isn't a message-count cap (no such setting exists in this version of Open WebUI).</p>
+
+  <h2>The Evidence That Actually Held Up</h2>
+  <p>Ollama reports a <code>prompt_eval_count</code> with every response — how many tokens it just processed. In the repro conversation, that number was <strong>identical on both turns</strong>, proof the second question's request never actually carried the first turn's history. The same pattern showed up in all fifteen of the most recent chats checked — systemic, not a one-off — and it held up against the standalone script's own token counts from Part 1, which grow normally turn over turn in the same environment. The trail led into the installed Open WebUI's own source code, where a code path exists specifically to handle reasoning-model history correctly — present and accounted for, but not yet confirmed whether it's actually running on every request.</p>
+
+  <h2>Where It Stands</h2>
+  <div class="status-banner status-pending">Open WebUI in-thread memory bug: DIAGNOSED, fix not yet applied</div>
+  <p>The standalone script from Part 1 works as a stopgap outside Open WebUI's own interface in the meantime. Confirming and fixing the underlying Open WebUI behavior is ongoing.</p>
+
+  <h2>Primary Lesson</h2>
+  <p>Three plausible theories got ruled out one at a time by direct checks, but none of them were what actually proved the bug — an identical number showing up twice in a row is what did. That's the same discipline that turned up the wrong-tailnet mixup back in <a href="003-mobile-access-take-two-tailscale.html">Build Journal #003</a>: when something looks fine on the surface, find the one piece of evidence that can't lie, rather than trusting the plausible-sounding theory.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

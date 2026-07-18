@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Journal #004 — Two Claude Codes, One Shared Folder — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Build Journal #004 — Two Claude Codes, One Shared Folder</h1>
+  <div class="subtitle">July 12, 2026</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Back to Build Journal</a></p>
+
+  <p>Until tonight, Claude Code lived in exactly one place: the HP Desktop, reachable by whoever was at that keyboard. It could reach into Node A and configure things there — Power/Environment Settings, Open WebUI — but only as a remote operation from the desktop side. Tonight that changed: Claude Code got installed and run directly on Node A itself, as its own independent instance rather than a target being configured from afar. See the <a href="../architecture/index.html#where-claude-code-fits">Architecture page</a> for where this fits into the wider system.</p>
+
+  <h2>Two Instances, Two Names</h2>
+  <p>To keep them straight, the lab now refers to <strong>CC1</strong> (HP Desktop) and <strong>CC2</strong> (Node A). CC1 is the "architect" instance — planning, documentation, day-to-day driving of the lab. CC2 stays close to the hardware it manages, checking and adjusting OS-level settings directly on the machine running Ollama and Open WebUI.</p>
+
+  <h2>The Channel: cc-sync</h2>
+  <p>The two instances hand off messages through <code>cc-sync</code>, a folder of plain text files shared over OneDrive — not a live network connection, and not inside any git repo. That's a deliberate choice, not a limitation worked around later.</p>
+
+  <h2>Notify-Then-Wait, Not Auto-Execute</h2>
+  <p>Both sides follow the same rule: read a new file, understand what it's asking, prepare a plan — then stop and wait for an explicit human go-ahead before acting or replying. Neither instance executes anything based purely on what the other one wrote.</p>
+  <p>This mirrors an idea floated earlier for keeping two separate people's Claude Code assistants loosely in sync by email, which was deliberately never built past the proposal stage: letting one AI assistant's message drive another assistant's actions unsupervised is a prompt-injection risk, full stop. The same caution applies here, just over a shared folder instead of email.</p>
+
+  <h2>How the Polling Actually Works</h2>
+  <p>Each side runs its own local hourly loop to check the folder for new files, plus supports ad hoc manual checks on request. That loop is session-only — it dies if the session closes, and auto-expires after 7 days regardless — because cloud-hosted scheduling can't see local, OneDrive-synced files. Someone has to be running a live session on each machine for the channel to actually poll.</p>
+  <p>Each side also keeps its own small state file (tracking which filenames it's already seen) so a file that's already been read doesn't get reported again on the next poll.</p>
+
+  <h2>Tonight's Test</h2>
+  <p>Both sides exchanged intro files and confirmed they could read what the other one wrote — the channel is symmetric. Nothing beyond setup and status messages has gone through it yet.</p>
+
+  <h2>Session Result</h2>
+  <div class="status-banner status-success">cc-sync channel: LIVE — setup confirmed both directions</div>
+  <div class="status-banner status-pending">First real task through the channel: not yet attempted</div>
+
+  <h2>What's Next</h2>
+  <p>The actual test of this design isn't whether two Claude Code instances can exchange a text file — that part's done. It's whether the notify-then-wait discipline holds up once something real gets routed through it. See <a href="005-building-memory-finding-a-bug.html">Build Journal #005</a> for what happened the very next day.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
