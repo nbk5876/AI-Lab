@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 23 — RAG-Path Timing Bench — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Test 23 — RAG-Path Timing Bench</h1>
+  <div class="subtitle">Where the RAG wall-clock gap actually lives</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="test-log.html">← Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <div class="status-banner status-success">Test 23 complete — 30/30 trials, 0 errors. Median overhead of ~9.4 s attributable to Open WebUI's own RAG pipeline, not model inference or embedding.</div>
+
+  <h2 id="t23-background" class="chapter">Background <a class="anchor-link" href="#t23-background" aria-label="Link to this section">#</a></h2>
+  <p><a href="test-log.html">Test 21</a> found that Open WebUI's own background tasks — automatic title, tag, and follow-up generation — were the real culprit behind slow queries, and disabling them collapsed the median chat latency from ~58 s to ~13 s.</p>
+  <p>Test 22 verified the RAG pipeline end to end (5/5 known-answer queries correct, embedding engine switched to Ollama-served <code>nomic-embed-text</code>) but observed wall-clock time exceeding 30 s against a displayed thinking time of only 7–14 s — an unresolved gap that motivated this bench.</p>
+
+  <h2 id="t23-method" class="chapter">Question &amp; Method <a class="anchor-link" href="#t23-method" aria-label="Link to this section">#</a></h2>
+  <p>Where does the wall-clock gap actually live — model inference, the embedding call, or Open WebUI itself?</p>
+  <p><strong>Design:</strong> paired trials, same known-answer question with and without the knowledge base attached, N=15 per condition (30 total), alternating A/B to spread any drift, fresh chat per trial.</p>
+  <p><strong>Instrumentation:</strong> a capture proxy sat on Ollama's real port; the real Ollama instance moved to an alternate port behind it. Open WebUI itself was unmodified and unaware of the swap. Ollama's own reported timing fields (<code>load_duration</code>, <code>prompt_eval_duration</code>, <code>eval_duration</code>, <code>total_duration</code>) served as ground truth for model-side time — wall clock minus Ollama's own total is the overhead attributable to something outside Ollama.</p>
+
+  <figure class="img-wide">
+    <a href="../images/test23-port-swap-diagram.png" target="_blank" rel="noopener">
+      <img src="../images/test23-port-swap-diagram.png" alt="Diagram of Test 23's instrumentation. Normal state: Open WebUI on port 8080 talks to Ollama on port 11434, serving qwen3 and nomic-embed. Test 23 run state: Open WebUI is unchanged, talking to capture_proxy on port 11434, which logs timing fields and forwards to Ollama, moved to port 11499.">
+    </a>
+    <figcaption>Test 23 instrumentation: the capture proxy impersonates Ollama on its real port; Open WebUI is unmodified and unaware. Normal state restored after the run.</figcaption>
+  </figure>
+
+  <p><strong>Controls:</strong> Test 21's config held throughout (Title/Follow-Up/Tags generation disabled). A controlled warm-up ran before any scored trial, and a written restore procedure was executed and verified afterward. <code>embed_fired</code> was captured per trial as an empirical check on whether the embedding call actually ran.</p>
+
+  <h2 id="t23-catch" class="chapter">The Mid-Run Catch <a class="anchor-link" href="#t23-catch" aria-label="Link to this section">#</a></h2>
+  <p>The first execution attempt paused during its own warm-up check: <code>ollama ps</code> showed the embedding model had never loaded. The root cause was a design flaw, not a bug in the running bench — the original spec's RAG condition attached the knowledge base by sending the literal text <code>#RAG Test &lt;question&gt;</code>, mirroring how a person types it into Open WebUI's chat box. That syntax is parsed by Open WebUI's own frontend before the request is ever built; sent as plain text over the raw API, it does nothing. The original design would have run 30 trials comparing two effectively identical no-context conditions.</p>
+  <p>The fix: attach the knowledge base directly via the API's own <code>files</code> field, referencing the knowledge base's ID. This was verified against the normal, un-swapped Ollama instance before resuming — no live-infra risk was taken to find or test the fix. The environment was fully restored between the aborted attempt and the real run, and the spec was revised in place (now v3) to document the finding.</p>
+
+  <div class="lessons">
+    <h3>Lesson</h3>
+    <p>The warm-up gate existed to control model state — and instead caught a design flaw before any scored trial ran. Checks that control state catch more than checks that merely record it.</p>
+  </div>
+
+  <h2 id="t23-results" class="chapter">Results <a class="anchor-link" href="#t23-results" aria-label="Link to this section">#</a></h2>
+  <table class="spec-table">
+    <tr><th>Metric</th><th>no_rag (N=15)</th><th>rag (N=15)</th></tr>
+    <tr><td>Wall clock — median</td><td>44.0 s</td><td>44.9 s</td></tr>
+    <tr><td>Ollama <code>total_duration</code> — median</td><td>41.7 s</td><td>30.9 s</td></tr>
+    <tr><td><strong>Overhead</strong> (wall − Ollama total) — median</td><td><strong>2.3 s</strong></td><td><strong>11.7 s</strong></td></tr>
+    <tr><td>Embedding call fired</td><td>0/15 (expected)</td><td>15/15 (expected)</td></tr>
+    <tr><td>Embedding <code>total_duration</code> — median (when fired)</td><td>—</td><td>0.04 s</td></tr>
+  </table>
+  <p>The gap lives in Open WebUI's own RAG pipeline — retrieval, chunk assembly, and prompt injection — not in model inference and not in the embedding call itself, which is negligible. This closes a meaningful chunk of Test 22's open observation: roughly 30 s of Ollama's own time plus roughly 12 s of Open WebUI overhead approximates the wall clock actually observed there.</p>
+  <p>Measured but not yet explained: ~9.4 s is a lot for retrieval against a five-fact, single-chunk document. Whether this cost is fixed per query or scales with corpus size is unknown, and deferred to a future test against a harder, more realistic document set.</p>
+
+  <h2 id="t23-confound" class="chapter">The Confound <a class="anchor-link" href="#t23-confound" aria-label="Link to this section">#</a></h2>
+  <p>Ollama's own generation time was <em>shorter</em> for RAG trials (median 30.7 s) than for plain trials (median 41.2 s) — the opposite of what "RAG adds cost" would predict looking at generation alone. This is very likely an artifact of reusing a single question: the no-RAG condition cannot answer it and generates long, hedging text, while the RAG condition retrieves the fact directly and answers concisely with a citation.</p>
+  <p>Consequence: raw wall-clock is not a clean RAG-vs-plain comparison in this run. The isolated overhead metric above — which factors out generation length entirely — is the reliable number, not total wall clock. A planned follow-up test using a question answerable in both conditions would remove this confound.</p>
+
+  <h2 id="t23-conclusions" class="chapter">Conclusions <a class="anchor-link" href="#t23-conclusions" aria-label="Link to this section">#</a></h2>
+  <ol>
+    <li>RAG adds a real, measurable overhead of ~9.4 s median, located in Open WebUI's own pipeline — not in model inference and not in the embedding call.</li>
+    <li>The embedding call itself is negligible (~0.04 s median) — it is not the source of RAG's added latency.</li>
+    <li>Async Embedding Processing affects document upload-time indexing only; query-time embedding always runs synchronously regardless of the setting, confirmed empirically (<code>embed_fired</code> true on 15/15 RAG trials, false on 15/15 plain trials).</li>
+    <li>A real confound was identified rather than smoothed over — reusing one question makes raw wall-clock an unreliable RAG-vs-plain comparison here. A follow-up test is planned to remove it.</li>
+    <li>The written restore procedure was executed and verified twice (once after the aborted first attempt, once after the real run) — no live infrastructure was left in a swapped state.</li>
+  </ol>
+
+  <p><a href="test-log.html">← Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
