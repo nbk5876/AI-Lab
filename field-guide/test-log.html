@@ -36,6 +36,8 @@
 
   <p>This page is the readable view of the lab's master test log. Tests 1–13 established the remote-access path and are told in narrative form in <a href="mobile-lan-access.html">Part 2</a> and <a href="reliable-remote-access.html">Part 3</a>; Tests 14 onward diagnose and fix the extended-idle failure, documented in <a href="always-on-server.html">Part 4</a>. Prefer the raw spreadsheet? <a href="AI_Lab_Test_Log.xlsx">Download the working log (.xlsx)</a>.</p>
 
+  <p>Test 23 (RAG-path timing bench) has its own dedicated write-up: <a href="test23-rag-timing-bench.html">Test 23 — RAG-Path Timing Bench</a>.</p>
+
   <div class="lessons">
     <h3>How to read this log</h3>
     <p>Every test has a number, a client device, and a validity ruling. Tests marked <strong>Invalid</strong> were run from the HP laptop while its Tailscale client was silently stuck in <code>NoState</code> — they measured nothing and are kept only for honesty. The standard test prompt is <em>"Answer in one sentence only: why do cats purr?"</em>; timing comparisons use that prompt unless noted.</p>
@@ -149,6 +151,11 @@
     <a class="card" href="always-on-server.html">
       <h2>Part 4: Always-On Server</h2>
       <p>The full narrative behind Tests 14–19 — diagnosis, the Modern Standby fix, and the tests that proved it.</p>
+      <span class="card-link">Read →</span>
+    </a>
+    <a class="card" href="test23-rag-timing-bench.html">
+      <h2>Test 23: RAG-Path Timing Bench</h2>
+      <p>Where the RAG wall-clock gap actually lives — a mid-run design-flaw catch, and the confound honestly flagged along the way.</p>
       <span class="card-link">Read →</span>
     </a>
   </div>
