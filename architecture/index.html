@@ -61,27 +61,27 @@
   <h2 id="where-claude-code-fits" class="chapter">Where Claude Code fits <a class="anchor-link" href="#where-claude-code-fits" aria-label="Link to this section">#</a></h2>
   <p>Claude Code acts as the engineering assistant for the lab itself — installing software, writing documentation, building this very site, and keeping the <a href="../build-journal/index.html">Build Journal</a> and Engineering Notebook up to date as the lab grows.</p>
 
-  <p>As of July 12, 2026, there are two separate Claude Code instances running: one on Bryan's everyday HP desktop, and a second installed directly on Node A (<code>ai-lab-b</code>) itself, alongside the Ollama LLM it manages there.</p>
+  <p>As of July 12, 2026, there are two separate Claude Code instances running: one on the everyday HP desktop, and a second installed directly on Node A (<code>ai-lab-b</code>) itself, alongside the Ollama LLM it manages there.</p>
 
   <figure class="img-wide">
     <a href="../images/AI-Lab.png" target="_blank" rel="noopener">
-      <img src="../images/AI-Lab.png" alt="Diagram of the AI Lab's request and configuration loop, numbered 1 through 4: Bryan at the HP Desktop sends prompts to (2) Claude Code CC1, and separately consults (1) Claude in the Cloud. CC1 and (3) Claude Code CC2 on Lab PC 2 (Node A) exchange messages through an async shared-folder channel. On Node A, CC2 configures Power and Environment Settings, Open WebUI, and the (4) qwen3 LLM. Open WebUI communicates with the qwen3 LLM directly. Bryan's mobile phone connects two ways: AI Prompts to Open WebUI, and CC2 Prompts directly to Claude Code CC2.">
+      <img src="../images/AI-Lab.png" alt="Diagram of the AI Lab's request and configuration loop, numbered 1 through 4: the HP Desktop sends prompts to (2) Claude Code CC1, and separately consults (1) Claude in the Cloud. CC1 and (3) Claude Code CC2 on Lab PC 2 (Node A) exchange messages through an async shared-folder channel. On Node A, CC2 configures Power and Environment Settings, Open WebUI, and the (4) qwen3 LLM. Open WebUI communicates with the qwen3 LLM directly. A mobile phone connects two ways: AI Prompts to Open WebUI, and CC2 Prompts directly to Claude Code CC2.">
     </a>
     <figcaption>The full lab loop, at a glance — request paths, config relationships, and mobile access</figcaption>
   </figure>
 
   <ol>
-    <li><strong>[1] Claude in the Cloud</strong> — consulted separately by Bryan for some work, independent of either local Claude Code instance.</li>
-    <li><strong>[2] Claude Code CC1</strong> — runs on the HP Desktop (HP Core7), the "architect" instance Bryan drives day to day for planning and documentation.</li>
+    <li><strong>[1] Claude in the Cloud</strong> — consulted separately for some work, independent of either local Claude Code instance.</li>
+    <li><strong>[2] Claude Code CC1</strong> — runs on the HP Desktop (HP Core7), the "architect" instance used day to day for planning and documentation.</li>
     <li><strong>[3] Claude Code CC2</strong> — runs on Lab PC 2 / Node A (Beelink SER9), configuring Power/Environment Settings and Open WebUI directly on that machine.</li>
-    <li><strong>[4] qwen3 LLM</strong> — the local model on Node A, served through Open WebUI and reachable from Bryan's mobile phone via AI Prompts.</li>
+    <li><strong>[4] qwen3 LLM</strong> — the local model on Node A, served through Open WebUI and reachable from a mobile phone via AI Prompts.</li>
   </ol>
 
   <p>The two instances hand off messages through <code>cc-sync</code>, a plain-text folder shared over OneDrive rather than a live network connection — which is why the diagram labels that link <strong>Async</strong>, not Sync. Each instance polls the folder on an hourly local loop (plus ad hoc checks on request) and follows the same rule on both sides: read a new file, understand what it's asking, prepare a plan — then stop and wait for a human go-ahead before acting or replying.</p>
 
-  <p>Async also matches how Bryan actually works day to day: he drives the lab primarily through Claude Code 1 on the HP desktop — the "architect" assistant for planning and documentation — rather than having to hold the same conversation twice with two different assistants in real time. Claude Code 2 stays close to Node A itself, checking and adjusting OS-level parameters directly on that machine, and reports back through the shared folder when Bryan has something for it or wants a status check.</p>
+  <p>Async also matches how the lab actually runs day to day: work flows primarily through Claude Code 1 on the HP desktop — the "architect" assistant for planning and documentation — rather than holding the same conversation twice with two different assistants in real time. Claude Code 2 stays close to Node A itself, checking and adjusting OS-level parameters directly on that machine, and reports back through the shared folder whenever there's something for it to pick up or a status check is needed.</p>
 
-  <p>The diagram also shows two paths not covered above. Bryan separately consults <strong>Claude in the Cloud</strong> for some work, independent of either local instance. And his phone reaches Node A two distinct ways: <strong>AI Prompts</strong> to Open WebUI for chatting with the qwen3 LLM directly (see the Field Guide's <a href="../field-guide/mobile-lan-access.html">Mobile Access</a> page), and <strong>CC2 Prompts</strong> — a live connection straight to Claude Code CC2 itself, using Claude Code's built-in Remote Control feature, set up the same day this diagram was made.</p>
+  <p>The diagram also shows two paths not covered above. <strong>Claude in the Cloud</strong> is consulted separately for some work, independent of either local instance. And a mobile phone reaches Node A two distinct ways: <strong>AI Prompts</strong> to Open WebUI for chatting with the qwen3 LLM directly (see the Field Guide's <a href="../field-guide/mobile-lan-access.html">Mobile Access</a> page), and <strong>CC2 Prompts</strong> — a live connection straight to Claude Code CC2 itself, using Claude Code's built-in Remote Control feature, set up the same day this diagram was made.</p>
 
 </div>
 
