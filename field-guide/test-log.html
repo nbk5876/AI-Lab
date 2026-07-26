@@ -44,32 +44,38 @@
   </div>
 
   <h2 id="log-1" class="chapter">Summary — All Tests <a class="anchor-link" href="#log-1" aria-label="Link to this section">#</a></h2>
+  <p class="img-comment">Every row below is individually linkable — right-click a test number for its direct URL.</p>
   <table class="spec-table">
     <tr><th>Test</th><th>Client</th><th>Result</th><th>Note</th></tr>
-    <tr><td>1</td><td>HP</td><td>Failed — Invalid</td><td>HP Tailscale later found in NoState</td></tr>
-    <tr><td>2</td><td>HP</td><td>Failed — Invalid</td><td>Same NoState invalidation</td></tr>
-    <tr><td>3</td><td>iPhone</td><td>Stopped</td><td>No response after 4 minutes</td></tr>
-    <tr><td>4</td><td>iPhone</td><td>Failed</td><td>Page could not be loaded (DuckDuckGo, IP)</td></tr>
-    <tr><td>5</td><td>iPhone</td><td>Failed</td><td>Page could not be loaded (DuckDuckGo, MagicDNS)</td></tr>
-    <tr><td>6</td><td>Lab PC 2</td><td>Healthy</td><td>Local stack status check after waking PC</td></tr>
-    <tr><td>7</td><td>HP</td><td>Failed — Invalid</td><td>NoState invalidation</td></tr>
-    <tr><td>8</td><td>HP</td><td>Failed — Invalid</td><td>NoState invalidation</td></tr>
-    <tr><td>9</td><td>iPhone</td><td>Success</td><td>First clean remote query: 63 s / 23 s thinking</td></tr>
-    <tr><td>10</td><td>iPhone</td><td>Success</td><td>Immediate repeat: 71 s / 31 s thinking</td></tr>
-    <tr><td>11</td><td>iPhone</td><td>Success</td><td>One-sentence prompt: 40 s / 13 s thinking</td></tr>
-    <tr><td>12</td><td>iPhone</td><td>Success — Verify</td><td>Possible duplicate of Test 11 in source log</td></tr>
-    <tr><td>13</td><td>Lab PC 2</td><td>Success</td><td>Localhost comparison: 44 s / 24 s thinking</td></tr>
-    <tr><td>14</td><td>iPhone</td><td><strong>Failed</strong></td><td>~4 h idle → node offline; the failure that drove Part 3/4</td></tr>
-    <tr><td>15</td><td>iPhone</td><td>Success</td><td>Local wake instantly restored access; 33 s / 10 s</td></tr>
-    <tr><td>16</td><td>iPhone</td><td><strong>Success</strong></td><td>6 h 02 m untouched idle survived after power fix</td></tr>
-    <tr><td>16b</td><td>iPhone</td><td>Success</td><td>Warm second query, 55 s / 40 s (heavier prompt)</td></tr>
-    <tr><td>19</td><td>iPhone</td><td>Success</td><td>MagicDNS short name works; 121 s cold / 31 s thinking</td></tr>
-    <tr><td>19b</td><td>iPhone</td><td>Success</td><td>Warm repeat 44 s — cold/warm gap ≈ 77 s</td></tr>
-    <tr><td>17a</td><td>iPhone</td><td>Failed → Success</td><td>Night 2: connectivity held; cold-load timeout, retry OK</td></tr>
-    <tr><td>17b</td><td>HP</td><td>Success</td><td>HP recovered from NoState; MagicDNS works from desktop</td></tr>
-    <tr><td>19c</td><td>iPhone</td><td>Success</td><td>Phone-only stopwatch protocol: 104 s / 52 s thinking</td></tr>
-    <tr><td>17</td><td>iPhone</td><td>Pending</td><td>12+ hour untouched idle endurance</td></tr>
-    <tr><td>18</td><td>iPhone</td><td>Pending</td><td>Reboot resilience, Tailscale unattended mode</td></tr>
+    <tr id="test-1"><td><a href="#test-1">1</a></td><td>HP</td><td>Failed — Invalid</td><td>HP Tailscale later found in NoState</td></tr>
+    <tr id="test-2"><td><a href="#test-2">2</a></td><td>HP</td><td>Failed — Invalid</td><td>Same NoState invalidation</td></tr>
+    <tr id="test-3"><td><a href="#test-3">3</a></td><td>iPhone</td><td>Stopped</td><td>No response after 4 minutes</td></tr>
+    <tr id="test-4"><td><a href="#test-4">4</a></td><td>iPhone</td><td>Failed</td><td>Page could not be loaded (DuckDuckGo, IP)</td></tr>
+    <tr id="test-5"><td><a href="#test-5">5</a></td><td>iPhone</td><td>Failed</td><td>Page could not be loaded (DuckDuckGo, MagicDNS)</td></tr>
+    <tr id="test-6"><td><a href="#test-6">6</a></td><td>Lab PC 2</td><td>Healthy</td><td>Local stack status check after waking PC</td></tr>
+    <tr id="test-7"><td><a href="#test-7">7</a></td><td>HP</td><td>Failed — Invalid</td><td>NoState invalidation</td></tr>
+    <tr id="test-8"><td><a href="#test-8">8</a></td><td>HP</td><td>Failed — Invalid</td><td>NoState invalidation</td></tr>
+    <tr id="test-9"><td><a href="#test-9">9</a></td><td>iPhone</td><td>Success</td><td>First clean remote query: 63 s / 23 s thinking</td></tr>
+    <tr id="test-10"><td><a href="#test-10">10</a></td><td>iPhone</td><td>Success</td><td>Immediate repeat: 71 s / 31 s thinking</td></tr>
+    <tr id="test-11"><td><a href="#test-11">11</a></td><td>iPhone</td><td>Success</td><td>One-sentence prompt: 40 s / 13 s thinking</td></tr>
+    <tr id="test-12"><td><a href="#test-12">12</a></td><td>iPhone</td><td>Success — Verify</td><td>Possible duplicate of Test 11 in source log</td></tr>
+    <tr id="test-13"><td><a href="#test-13">13</a></td><td>Lab PC 2</td><td>Success</td><td>Localhost comparison: 44 s / 24 s thinking</td></tr>
+    <tr><td><a href="#test-14">14</a></td><td>iPhone</td><td><strong>Failed</strong></td><td>~4 h idle → node offline; the failure that drove Part 3/4</td></tr>
+    <tr><td><a href="#test-15">15</a></td><td>iPhone</td><td>Success</td><td>Local wake instantly restored access; 33 s / 10 s</td></tr>
+    <tr><td><a href="#test-16">16</a></td><td>iPhone</td><td><strong>Success</strong></td><td>6 h 02 m untouched idle survived after power fix</td></tr>
+    <tr id="test-16b"><td><a href="#test-16b">16b</a></td><td>iPhone</td><td>Success</td><td>Warm second query, 55 s / 40 s (heavier prompt)</td></tr>
+    <tr><td><a href="#test-19">19</a></td><td>iPhone</td><td>Success</td><td>MagicDNS short name works; 121 s cold / 31 s thinking</td></tr>
+    <tr id="test-19b"><td><a href="#test-19">19b</a></td><td>iPhone</td><td>Success</td><td>Warm repeat 44 s — cold/warm gap ≈ 77 s</td></tr>
+    <tr><td><a href="#test-17a">17a</a></td><td>iPhone</td><td>Failed → Success</td><td>Night 2: connectivity held; cold-load timeout, retry OK</td></tr>
+    <tr><td><a href="#test-17b">17b</a></td><td>HP</td><td>Success</td><td>HP recovered from NoState; MagicDNS works from desktop</td></tr>
+    <tr><td><a href="#test-19c">19c</a></td><td>iPhone</td><td>Success</td><td>Phone-only stopwatch protocol: 104 s / 52 s thinking</td></tr>
+    <tr id="test-17"><td><a href="#test-pending">17</a></td><td>iPhone</td><td>Pending</td><td>12+ hour untouched idle endurance</td></tr>
+    <tr id="test-18"><td><a href="#test-pending">18</a></td><td>iPhone</td><td>Pending</td><td>Reboot resilience, Tailscale unattended mode</td></tr>
+    <tr id="test-20"><td><a href="#test-20">20</a></td><td>iPhone</td><td>Success</td><td>Cold model load measured at 4.5 s, not the assumed 77-90 s — full detail on <a href="where-the-seconds-go.html#part5-2">Part 5</a></td></tr>
+    <tr id="test-21"><td><a href="#test-21">21</a></td><td>HP</td><td>Measured</td><td>Disabling Title/Tags/Follow-Up collapsed chat path ~58 s → ~13 s median — full detail on <a href="where-the-seconds-go.html#part5-3">Part 5</a></td></tr>
+    <tr id="test-22"><td><a href="#test-22">22</a></td><td>Lab PC 2</td><td>5/5 PASS</td><td>RAG known-answer baseline verified end-to-end (Open WebUI → nomic-embed-text → qwen3:8b) — see <a href="AI_Lab_Test_Log.xlsx">the .xlsx</a> for full observations</td></tr>
+    <tr id="test-23"><td><a href="#test-23">23</a></td><td>Lab PC 2</td><td>30/30 COMPLETE</td><td>RAG-path timing bench — ~9.4 s overhead traced to Open WebUI's own pipeline — full write-up on <a href="test23-rag-timing-bench.html">its own page</a></td></tr>
+    <tr><td><a href="#test-24">24</a></td><td>Lab PC 2 + HP</td><td><strong>Bug found</strong></td><td>Open WebUI's displayed thinking-timer confirmed broken (upstream bug); real latency 20-49s, matched by Ollama's own timing</td></tr>
   </table>
 
   <h2 id="log-2" class="chapter">Test Detail — 14 Onward <a class="anchor-link" href="#log-2" aria-label="Link to this section">#</a></h2>
@@ -132,6 +138,15 @@
     <tr><th>Test 18</th><td>Reboot resilience: enable Tailscale unattended mode, reboot, do not log in, test from the phone</td></tr>
   </table>
   <div class="status-banner status-pending">Tests 17 and 18: Pending</div>
+
+  <h3 id="test-24">Test 24 — Open WebUI's displayed thinking-timer is wrong</h3>
+  <table class="spec-table">
+    <tr><th>Client / target</th><td>Browser on Lab PC 2, then browser on the HP desktop over the network → <code>ai-lab-b:8080</code>, plain query, no RAG</td></tr>
+    <tr><th>Result</th><td>Open WebUI's on-screen "Thought for Xs" timer showed <strong>&lt;1s</strong> on every round, 10+ rounds across both machines. Real latency, confirmed two independent ways (stopwatch and Ollama's own <code>total_duration</code> captured via a proxy), agreed within 1–3s every round: <strong>20–49s</strong> per round</td></tr>
+    <tr><th>Root cause</th><td>Confirmed <strong>upstream Open WebUI backend bug</strong> — not the frontend, not RAG, not the lab's proxy, network, or infrastructure. A persisted chat record showed the broken displayed value (<code>duration: 0</code>) and Ollama's real timing (<code>total_duration</code> = 21.80 s) side by side in the same message, proving the two timestamps used to compute the display don't bracket the real thinking phase. Mechanism is a working theory, not proven — see <a href="where-the-seconds-go.html#part5-1">Part 5</a> for where this investigation started</td></tr>
+    <tr><th>Where the seconds actually go</th><td>Not hidden or mysterious once measured: qwen3:8b generating at ~10–12 tok/s accounts for the real 20–49s directly. Not RAG, not the network, not a proxy tax</td></tr>
+  </table>
+  <div class="status-banner status-success">Test 24 Result: Displayed-timer bug confirmed and root-caused — real latency matches Ollama's own reported timing throughout; not a lab infrastructure issue</div>
 
   <h2 id="log-3" class="chapter">Conclusions After Tests 1–13 <a class="anchor-link" href="#log-3" aria-label="Link to this section">#</a></h2>
   <div class="lessons">

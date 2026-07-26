@@ -47,7 +47,7 @@
 
   <figure class="img-wide">
     <a href="../images/test23-port-swap-diagram.png" target="_blank" rel="noopener">
-      <img src="../images/test23-port-swap-diagram.png" alt="Diagram of Test 23's instrumentation. Normal state: Open WebUI on port 8080 talks to Ollama on port 11434, serving qwen3 and nomic-embed. Test 23 run state: Open WebUI is unchanged, talking to capture_proxy on port 11434, which logs timing fields and forwards to Ollama, moved to port 11499.">
+      <img src="../images/test23-port-swap-diagram.png" alt="Diagram of Test 23's instrumentation. Normal state: Open WebUI on port 8080 talks to Ollama on port 11434, serving qwen3 and nomic-embed. Test 23 run state: Open WebUI is unchanged, talking to capture_proxy on port 11434, which logs timing fields and forwards to Ollama, moved to port 11499." style="width: 60%; margin: 0 auto; display: block;">
     </a>
     <figcaption>Test 23 instrumentation: the capture proxy impersonates Ollama on its real port; Open WebUI is unmodified and unaware. Normal state restored after the run.</figcaption>
   </figure>

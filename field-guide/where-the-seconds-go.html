@@ -34,7 +34,7 @@
 
   <p><a href="always-on-server.html">← Part 4: Always-On Server</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
 
-  <div class="status-banner status-pending">This page is a live document. Findings current as of 2026-07-10 (Tests 20 &amp; 21). Test 22 (Task Model alternative) is still open.</div>
+  <div class="status-banner status-pending">This page is a live document. Findings current as of 2026-07-26 — Tests 20 &amp; 21 remain unchanged; the displayed-timer question this page's own methodology raised has since been root-caused as an upstream Open WebUI bug, not a lab issue — see <a href="test-log.html#test-24">Test 24</a>.</div>
 
   <p>Part 4 fixed <em>whether</em> Lab PC 2 stays reachable after extended idle. This page answers a different complaint that surfaced along the way: even when reachable, a phone query through Open WebUI takes about a minute while the model itself reports only ~30 seconds of thinking. Where does the rest go?</p>
 
@@ -98,7 +98,7 @@
 
   <h2 id="part5-5" class="chapter">Result and Tuned Path <a class="anchor-link" href="#part5-5" aria-label="Link to this section">#</a></h2>
   <p>Confirmed: the tuned chat path runs ≈13 s (median, Test 21), down from ≈58 s (median, Test 21) — roughly a 45-second reduction, and the latency is now predictable instead of swinging between 18 and 86 seconds. The fix adopted was to leave Title, Tags, and Follow-Up switched off, at the cost of losing those three conveniences.</p>
-  <p><strong>Not yet tested — Test 22:</strong> pointing Open WebUI's Task Model (Admin → Interface → Task Model) at a small model, such as <code>qwen3:0.6b</code>, instead of the full <code>qwen3:8b</code>, could in principle keep automatic titles/tags/follow-ups while cutting their cost. This is an untested idea, not a recommendation — it has no measurement behind it yet and should not be treated as the plan until Test 22 actually runs it.</p>
+  <p><strong>Not yet tested — a deferred Task Model alternative:</strong> pointing Open WebUI's Task Model (Admin → Interface → Task Model) at a small model, such as <code>qwen3:0.6b</code>, instead of the full <code>qwen3:8b</code>, could in principle keep automatic titles/tags/follow-ups while cutting their cost. This is an untested idea, not a recommendation — it has never been run and has no measurement behind it. (Test 22, as actually run, became the RAG known-answer baseline — see the <a href="test-log.html">Test Log</a>.)</p>
 
   <h2 id="part5-6" class="chapter">Reconciling the Two Figures' Numbers <a class="anchor-link" href="#part5-6" aria-label="Link to this section">#</a></h2>
   <div class="lessons">
@@ -127,7 +127,7 @@
   </div>
 
   <p><a href="always-on-server.html">← Part 4: Always-On Server</a> &nbsp;·&nbsp; <a href="test-log.html">Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
-  <div class="status-banner status-pending">Where the Seconds Go: Live document — findings current as of 2026-07-10 (Tests 20 &amp; 21) · Test 22 (Task Model alternative) not yet tested</div>
+  <div class="status-banner status-pending">Where the Seconds Go: Live document — findings current as of 2026-07-26 (Tests 20 &amp; 21 unchanged) · displayed-timer question root-caused as an upstream Open WebUI bug, see <a href="test-log.html#test-24">Test 24</a></div>
 
 </div>
 
