@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 25 — CPU &amp; Memory Profile — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Test 25 — CPU &amp; Memory Profile</h1>
+  <div class="subtitle">What the resource graphs show while qwen3:8b is generating</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="test-log.html">← Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <div class="status-banner status-success">Not a new numbered test — a resource-usage snapshot taken alongside <a href="test-log.html#test-25">Test 25</a>. It shows what's actually happening on the hardware while a response is generating, and helps explain why Test 25's levers moved time but not tokens/sec.</div>
+
+  <h2 id="t25c-background" class="chapter">Background <a class="anchor-link" href="#t25c-background" aria-label="Link to this section">#</a></h2>
+  <p><a href="test-log.html#test-25">Test 25</a> measured how much time two levers save on qwen3:8b — turning its "thinking" off, and constraining answer length — and found both real, with token throughput holding steady at roughly 13–15 tok/s in every condition. That steady-tok/s finding raised an obvious follow-up: what does the hardware itself look like while a request is running, and does the resource picture back up what the timing numbers already said?</p>
+  <p>Windows Task Manager's Performance tab was captured on Lab PC 2 (the Beelink SER9, an AMD Ryzen AI 9 HX PRO 370 with a Radeon 890M) at three points around a request: idle just before it starts, mid-generation, and the moment it finishes. These are illustrative snapshots from the live Test 25 investigation, not a scored per-trial capture — read them as a picture of the shape of the load, not as a fifth measured condition.</p>
+
+  <h2 id="t25c-start" class="chapter">Start — Idle to Loaded <a class="anchor-link" href="#t25c-start" aria-label="Link to this section">#</a></h2>
+  <p>The machine sits at low single-digit CPU utilization at rest. The instant a request begins generating, utilization jumps sharply and settles onto a plateau — the cliff in the graph below is the visible boundary between "waiting" and "computing."</p>
+
+  <figure class="img-wide">
+    <a href="../images/test25-cpu-start.png" target="_blank" rel="noopener">
+      <img src="../images/test25-cpu-start.png" alt="Windows Task Manager CPU graph showing utilization jump from a low idle baseline to a sustained plateau around 56 percent the moment a request starts generating." style="width: 70%; margin: 0 auto; display: block;">
+    </a>
+    <figcaption>CPU utilization at the start of a request: idle baseline, then a sharp step up to a sustained ~56% plateau (AMD Ryzen AI 9 HX PRO 370, 12 cores / 24 logical processors, 3.85 GHz).</figcaption>
+  </figure>
+
+  <h2 id="t25c-mid" class="chapter">Mid-Run — CPU and Memory Together <a class="anchor-link" href="#t25c-mid" aria-label="Link to this section">#</a></h2>
+  <p>Partway through generation, both CPU and memory hold steady rather than climbing or spiking — the load is flat for the duration of the response, not front-loaded or bursty.</p>
+
+  <figure class="img-wide">
+    <a href="../images/test25-cpu-mid.png" target="_blank" rel="noopener">
+      <img src="../images/test25-cpu-mid.png" alt="Task Manager overview mid-run: CPU steady at 54 percent, Memory at 24.1 of 27.6 GB (87 percent), Disk at 1 percent, GPU at 2 percent, NPU at 0 percent." style="width: 85%; margin: 0 auto; display: block;">
+    </a>
+    <figcaption>Mid-generation overview: CPU holding at 54%, Memory at 87% (24.1/27.6 GB), Disk barely active at 1%. GPU sits at 2% and NPU at 0% — the Radeon 890M and NPU are essentially idle throughout.</figcaption>
+  </figure>
+
+  <figure class="img-wide">
+    <a href="../images/test25-mem-mid.png" target="_blank" rel="noopener">
+      <img src="../images/test25-mem-mid.png" alt="Task Manager Memory detail mid-run: 24.2 of 27.6 GB in use (88 percent), flat usage graph, 32 GB LPDDR5 total with 4.4 GB hardware reserved." style="width: 85%; margin: 0 auto; display: block;">
+    </a>
+    <figcaption>Memory detail at the same moment: 24.2/27.6 GB in use (88%), flat across the visible window — this is the loaded model plus context sitting resident in RAM, not something that spikes with each token.</figcaption>
+  </figure>
+
+  <h2 id="t25c-end" class="chapter">End — The Drop Back to Idle <a class="anchor-link" href="#t25c-end" aria-label="Link to this section">#</a></h2>
+  <p>When the response finishes, utilization doesn't taper — it falls off a cliff, back down to the same low idle band the machine started at.</p>
+
+  <figure class="img-wide">
+    <a href="../images/test25-cpu-end.png" target="_blank" rel="noopener">
+      <img src="../images/test25-cpu-end.png" alt="Windows Task Manager CPU graph showing a sustained plateau that drops sharply back to a low idle baseline around 5 percent the moment the response finishes." style="width: 70%; margin: 0 auto; display: block;">
+    </a>
+    <figcaption>CPU utilization at completion: the same plateau seen mid-run, ending in a sharp drop back to a ~5% idle baseline the instant the response finishes generating.</figcaption>
+  </figure>
+
+  <h2 id="t25c-analysis" class="chapter">What This Says About Model Performance <a class="anchor-link" href="#t25c-analysis" aria-label="Link to this section">#</a></h2>
+  <p><strong>Generation on this hardware is CPU-bound, full stop.</strong> GPU utilization sits at 2% and NPU at 0% throughout — the Radeon 890M and the NPU aren't doing any of the work. Every token qwen3:8b produces here is coming from the CPU's 12 cores / 24 threads. That matters for reading Test 25's results correctly: the ~13–15 tok/s ceiling those levers were measured against is a <em>CPU-only</em> number. Thinking-off and output-length constraints save time by producing fewer tokens against that ceiling — neither lever touches the ceiling itself. GPU or NPU offload, if it were ever wired up, is a separate, unpulled lever that could move the ceiling; nothing here confirms it would, only that nothing currently uses it.</p>
+  <p><strong>The flat plateau is the visual match for Test 25's steady tok/s finding.</strong> Test 25 found token throughput held in a tight 12.8–15.1 tok/s band across all four conditions (thinking on/off × constrained/unconstrained). The CPU graph shows why that's plausible: utilization doesn't ramp, spike, or vary once generation starts — it holds a flat plateau for the whole run, then cliffs back to idle exactly when the response ends. A steady compute load producing a steady token rate is consistent with — though doesn't by itself prove — the same generation mechanism running unchanged underneath all four conditions, with only the token count differing between them.</p>
+  <p><strong>Memory is a flat, standing cost, not a per-condition variable.</strong> Usage holds at 87–88% of the 27.6 GB Windows reports as usable (32 GB of physical LPDDR5 total, with 4.4 GB carved out as "Hardware reserved" — likely shared graphics memory for the integrated Radeon 890M) and doesn't visibly move during the capture window. That's consistent with memory pressure being driven by the loaded model weights and context window, not by which Test 25 condition is running — the thinking/output-length levers change how long a response takes, not how much RAM it costs while it's running. Worth flagging on its own terms: 88% of usable memory is not a lot of headroom on this machine.</p>
+  <p><strong>One open question, not explained here:</strong> the plateau sits around 54–60% utilization, not near 100%, despite the CPU being the only thing doing the work. Whether that reflects Ollama not using every available thread, a compute pattern that doesn't parallelize across all 24 logical processors, or something else, isn't determined by these screenshots — flagged as a candidate for a future look, not resolved by this one.</p>
+
+  <div class="lessons">
+    <h3>Lesson</h3>
+    <p>A stopwatch tells you a lever saved time. A resource graph tells you <em>where</em> the machine was spending it — and here, the CPU chart's cliff-shaped start and end line up with the numbers Test 25 already measured, while also surfacing something the timing bench alone couldn't: the GPU and NPU sitting untouched the entire time.</p>
+  </div>
+
+  <h2 id="t25c-conclusions" class="chapter">Conclusions <a class="anchor-link" href="#t25c-conclusions" aria-label="Link to this section">#</a></h2>
+  <ol>
+    <li>Generation runs entirely on the CPU — GPU (2%) and NPU (0%) are essentially idle throughout. Test 25's ~13–15 tok/s ceiling is a CPU-only number; hardware acceleration is a lever nobody has pulled yet.</li>
+    <li>The CPU load's flat plateau, held constant for the whole response and bounded by sharp idle-to-load and load-to-idle transitions, is the visual counterpart of Test 25's finding that tok/s held steady across all four tested conditions.</li>
+    <li>Memory usage (~87–88% of usable RAM) is flat during generation — a standing cost tied to the loaded model and context, not something the thinking/output-length levers move.</li>
+    <li>CPU utilization plateaus around 54–60%, not full saturation — an open observation, not explained by this snapshot.</li>
+    <li>These are illustrative captures from the live Test 25 session, not a scored measurement — they support and help interpret Test 25's numbers, not replace them.</li>
+  </ol>
+
+  <p><a href="test-log.html">← Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>

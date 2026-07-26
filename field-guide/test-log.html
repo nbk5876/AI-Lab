@@ -76,7 +76,7 @@
     <tr id="test-22"><td><a href="#test-22">22</a></td><td>Lab PC 2</td><td>5/5 PASS</td><td>RAG known-answer baseline verified end-to-end (Open WebUI → nomic-embed-text → qwen3:8b) — see <a href="AI_Lab_Test_Log.xlsx">the .xlsx</a> for full observations</td></tr>
     <tr id="test-23"><td><a href="#test-23">23</a></td><td>Lab PC 2</td><td>30/30 COMPLETE</td><td>RAG-path timing bench — ~9.4 s overhead traced to Open WebUI's own pipeline — full write-up on <a href="test23-rag-timing-bench.html">its own page</a></td></tr>
     <tr><td><a href="#test-24">24</a></td><td>Lab PC 2 + HP</td><td><strong>Bug found</strong></td><td>Open WebUI's displayed thinking-timer confirmed broken (upstream bug); real latency 20-49s, matched by Ollama's own timing</td></tr>
-    <tr id="test-25"><td><a href="#test-25">25</a></td><td>Lab PC 2</td><td>Measured</td><td>Thinking-off and output-length levers quantified against Ollama directly — up to ~53x faster combined, token rate steady ~13-15 tok/s throughout</td></tr>
+    <tr id="test-25"><td><a href="#test-25">25</a></td><td>Lab PC 2</td><td>Measured</td><td>Thinking-off and output-length levers quantified against Ollama directly — up to ~53x faster combined, token rate steady ~13-15 tok/s throughout — see also <a href="test25-cpu-profile.html">the CPU/Memory profile</a></td></tr>
   </table>
 
   <h2 id="log-2" class="chapter">Test Detail — 14 Onward <a class="anchor-link" href="#log-2" aria-label="Link to this section">#</a></h2>
@@ -162,6 +162,7 @@
     <tr><th>Scope</th><td>Quantify-only, per the decision on the open questions in the test spec — no persistent thinking-off configuration change made or proposed as a follow-up</td></tr>
   </table>
   <div class="status-banner status-success">Test 25 Result: Both hypotheses confirmed — disabling thinking and constraining output length combine for up to ~53x faster responses, with token throughput steady throughout</div>
+  <p>What was actually happening on the hardware during these runs — CPU, memory, and how they line up with the steady tok/s finding: <a href="test25-cpu-profile.html">Test 25 — CPU &amp; Memory Profile</a>.</p>
 
   <h2 id="log-3" class="chapter">Conclusions After Tests 1–13 <a class="anchor-link" href="#log-3" aria-label="Link to this section">#</a></h2>
   <div class="lessons">
@@ -186,6 +187,11 @@
     <a class="card" href="test23-rag-timing-bench.html">
       <h2>Test 23: RAG-Path Timing Bench</h2>
       <p>Where the RAG wall-clock gap actually lives — a mid-run design-flaw catch, and the confound honestly flagged along the way.</p>
+      <span class="card-link">Read →</span>
+    </a>
+    <a class="card" href="test25-cpu-profile.html">
+      <h2>Test 25: CPU &amp; Memory Profile</h2>
+      <p>What the resource graphs show while qwen3:8b is generating, and what they say about the ~13–15 tok/s ceiling.</p>
       <span class="card-link">Read →</span>
     </a>
   </div>
