@@ -48,7 +48,7 @@
   <div class="lessons">
     <h3>Scope</h3>
     <p>This page documents the working mobile access path using Tailscale.</p>
-    <p>Tailscale is a mesh VPN — it creates a private, encrypted network (a "tailnet") between devices, no matter where each one physically is. Every device that joins gets its own stable address on that private network, and can reach every other device on it directly, as if they were all sitting on the same LAN. We're using it here because the lab's nodes and the phones that need to reach them aren't on the same physical network: Node A sits on the condo Wi-Fi, while a phone might be on cellular data, a coffee shop's Wi-Fi, or anywhere else. Tailscale bridges that gap without exposing Open WebUI to the open internet or requiring router port-forwarding.</p>
+    <p>Tailscale is a mesh VPN — it creates a private, encrypted network (a "tailnet") between devices, no matter where each one physically is. Every device that joins gets its own stable address on that private network, and can reach every other device on it directly, as if they were all sitting on the same LAN. We're using it here because the lab's nodes and the phones that need to reach them aren't on the same physical network: Node A sits on the home Wi-Fi, while a phone might be on cellular data, a coffee shop's Wi-Fi, or anywhere else. Tailscale bridges that gap without exposing Open WebUI to the open internet or requiring router port-forwarding.</p>
     <p>The iPhone does not connect directly to Node A through its local LAN address. Instead, the iPhone reaches Node A through the Tailscale tailnet, using Node A's Tailscale IP address.</p>
     <p>Working path:</p>
     <div class="code-block">iPhone → Cellular or Wi-Fi Internet → Tailscale Tailnet → Node A → Open WebUI</div>
@@ -184,7 +184,7 @@ InterfaceAlias NetworkCategory IPv4Connectivity
 -------------- --------------- ----------------
 Tailscale       Private         LocalNetwork
 Wi-Fi 2         Public          Internet</div>
-  <p>The condo Wi-Fi interface was classified <strong>Public</strong>. Windows applies much more restrictive inbound behavior to Public networks than Private ones. Changing it:</p>
+  <p>The home Wi-Fi interface was classified <strong>Public</strong>. Windows applies much more restrictive inbound behavior to Public networks than Private ones. Changing it:</p>
   <div class="code-block">Set-NetConnectionProfile -InterfaceAlias "Wi-Fi 2" -NetworkCategory Private
 
 # Verified:
@@ -227,7 +227,7 @@ Wi-Fi 2    Private    Internet</div>
   <div class="diagram">iPhone
 192.168.88.240
   │
-  │ Condo Wi-Fi
+  │ Home Wi-Fi
   ▼
 Node A (AI-LAB-B)
 192.168.88.239
@@ -334,7 +334,7 @@ curl http://localhost:8080
 
   <h2 id="mobile-16" class="chapter">Remote Access with Tailscale <a class="anchor-link" href="#mobile-16" aria-label="Link to this section">#</a></h2>
   <div class="status-banner status-success">Status: SUCCESS</div>
-  <p>With LAN access working and the startup scripts in place, the next step was reaching Open WebUI from the iPhone over cellular data — off the condo Wi-Fi entirely — using Tailscale.</p>
+  <p>With LAN access working and the startup scripts in place, the next step was reaching Open WebUI from the iPhone over cellular data — off the home Wi-Fi entirely — using Tailscale.</p>
   <p>The first attempt didn't work: Node A's Tailscale client was signed into the wrong identity, on a personal tailnet rather than the shared AI Lab tailnet that Node B and the iPhone already belonged to. Two devices on different tailnets can't see each other over Tailscale, no matter how correctly everything else is configured.</p>
   <p>The fix was to sign Node A out of Tailscale and back in, explicitly selecting the shared AI Lab tailnet this time instead of the personal one:</p>
   <div class="code-block">"C:\Program Files\Tailscale\tailscale.exe" logout

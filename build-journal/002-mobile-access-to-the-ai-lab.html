@@ -34,7 +34,7 @@
 
   <p><a href="index.html">← Back to Build Journal</a></p>
 
-  <p>Today's objective was to get Open WebUI, running on Node A (Beelink SER9), reachable from an iPhone on the condo Wi-Fi. It turned into a real troubleshooting chain — the kind that's more instructive after the fact than it felt in the middle of it. Full technical detail lives in the <a href="../field-guide/mobile-lan-access.html">Field Guide, Part 2: Mobile LAN Access</a> — this entry is the narrative version of the same session.</p>
+  <p>Today's objective was to get Open WebUI, running on Node A (Beelink SER9), reachable from an iPhone on the home Wi-Fi. It turned into a real troubleshooting chain — the kind that's more instructive after the fact than it felt in the middle of it. Full technical detail lives in the <a href="../field-guide/mobile-lan-access.html">Field Guide, Part 2: Mobile LAN Access</a> — this entry is the narrative version of the same session.</p>
 
   <h2>Workstation Improvement</h2>
   <p>Small but worth noting: a USB keyboard/mouse sharing switch went in between the HP workstation and Node A, so both machines now share one keyboard and mouse. The monitor input still swaps separately between DisplayPort and HDMI. It made hopping back and forth between the two machines during this session a lot less annoying.</p>
@@ -66,7 +66,7 @@
   <p>To isolate the problem, a bare-bones Python HTTP server replaced Open WebUI in the test path. The iPhone still couldn't reach it — which was actually good news, because it ruled out Open WebUI itself and pointed the investigation at Windows networking instead.</p>
 
   <h2>Root Cause Discovery</h2>
-  <p>Windows had the condo Wi-Fi adapter classified as a <strong>Public</strong> network, which blocks inbound LAN traffic more aggressively than a Private one. Switching it to Private, then adding an explicit inbound firewall rule for the test port, got the iPhone loading the Python server's directory listing. That was the proof the LAN path itself worked.</p>
+  <p>Windows had the home Wi-Fi adapter classified as a <strong>Public</strong> network, which blocks inbound LAN traffic more aggressively than a Private one. Switching it to Private, then adding an explicit inbound firewall rule for the test port, got the iPhone loading the Python server's directory listing. That was the proof the LAN path itself worked.</p>
 
   <h2>Portal Discovery</h2>
   <p>While that temporary server was up, the AI Lab Portal loaded successfully on the iPhone straight from its local files — a nice side effect. It means the Portal can be previewed on a phone before anything gets pushed to GitHub or deployed to DreamHost. (With one caveat: that temporary server was exposing the whole user-profile directory tree, not just the Portal folder — worth remembering next time, and only meant to run from inside the Portal folder itself going forward.)</p>
