@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tests 28–31 — Web Search Grounding on DeepSeek-R1 — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Tests 28–31 — Web Search Grounding on DeepSeek-R1</h1>
+  <div class="subtitle">A silent failure, two stacked bugs, a real fix — and a subtler failure mode that turned out to be a coin-flip</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="../build-journal/index.html">Build Journal</a></li>
+  <li><a href="index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="test-log.html">← Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+  <div class="status-banner status-success">Four tests, one investigation: DeepSeek-R1 (7B)'s web search went from silently broken, to fixed and verified, to a subtler failure mode, to a measured explanation for that failure mode — a coin-flip on whether search fires at all, not a retrieval or reasoning defect.</div>
+
+  <h2 id="t2831-background" class="chapter">Background <a class="anchor-link" href="#t2831-background" aria-label="Link to this section">#</a></h2>
+  <p>DeepSeek-R1 (7B) was added to the lab as a second model alongside qwen3:8b, and web search was enabled for it the same way as everything else on this instance — a master toggle, a search backend, a per-chat switch. Four manual test runs with an identical post-cutoff prompt (a real event the model's training data couldn't know about) all came back as confident, detailed fabrications: no error, no search status line, no citations. That symptom — a toggle that's accepted but silently does nothing — is what kicked off this investigation.</p>
+
+  <h2 id="t2831-test28" class="chapter">Test 28 — The Silent Failure <a class="anchor-link" href="#t2831-test28" aria-label="Link to this section">#</a></h2>
+  <table class="spec-table">
+    <tr><th>Prompt</th><td>"Tell me about the state of the investigation into the seattle shooting near the space needle where 3 people were killed" — a real event (Bite of Seattle festival, Seattle Center, 3 killed / 4 wounded) that postdates the model's training cutoff, so any answer not describing it with citations means search didn't ground the response</td></tr>
+    <tr><th>Method</th><td>Reproduced live in the browser (not a scripted API call) with Open WebUI's backend log open, then cross-referenced the actual <code>open_webui</code> package source to trace the code path</td></tr>
+    <tr><th>Result</th><td>Fabricated a fictional 2017 "Space Needle shooting" with an invented suspect name, zero citations, zero search status indicator — and <strong>zero web-search-related log lines anywhere in the backend log</strong> for the request. No exception. Nothing to catch. Nothing was ever called.</td></tr>
+  </table>
+
+  <p><strong>Root cause #1 — the actual silent-failure bug.</strong> DeepSeek-R1 (7B)'s <strong>Function Calling</strong> parameter was unset, which resolves to Open WebUI's default, <strong>Native</strong>. In the backend's <code>middleware.py</code>:</p>
+
+  <div class="code-block">if metadata.get('params', {}).get('function_calling') == 'legacy':<br>&nbsp;&nbsp;&nbsp;&nbsp;form_data = await chat_web_search_handler(...)</div>
+
+  <p>Open WebUI's forced, always-on search path only runs when a model is set to <strong>Legacy</strong>. In Native mode, search is instead exposed to the model as a tool it has to choose to call itself — and DeepSeek-R1 via Ollama never emits that tool call. The search code simply never executes. Nothing fails, because nothing runs.</p>
+
+  <p><strong>Root cause #2 — found while verifying #1.</strong> Switching the model to Legacy forced the search path to fire — and it failed too, but visibly this time: a real "An error occurred while searching the web" status line, and a backend traceback showing the search library posted to DuckDuckGo, got back an HTTP 202 Accepted, and then raised <code>DDGSException: "No results found."</code> anyway — consistent with DuckDuckGo soft-blocking the request rather than a hard network failure.</p>
+
+  <div class="status-banner status-success">Test 28 Result: two stacked, independent bugs identified with direct source-code and backend-log evidence — a function-calling-mode gate that skips search entirely for this model, and underneath it, a DuckDuckGo backend that wasn't returning usable results even when reached. Diagnostic only; both fixes reported, neither applied — model reverted to its original state.</div>
+
+  <h2 id="t2831-test29" class="chapter">Test 29 — The Fix <a class="anchor-link" href="#t2831-test29" aria-label="Link to this section">#</a></h2>
+  <p>Both of Test 28's fixes were applied together: DeepSeek-R1 (7B)'s Function Calling set to <strong>Legacy</strong> (opening the forced-search path), and the instance's web search engine switched from DDGS to <strong>Brave</strong> (replacing the backend that was failing underneath it). The Brave API key was entered directly by the lab's human operator — never handled by either Claude Code instance, the same credential boundary used for SSH key setup elsewhere in this lab.</p>
+
+  <table class="spec-table">
+    <tr><th>Test run</th><td>Identical Test 28 prompt, new chat, Web Search toggle on</td></tr>
+    <tr><th>Result</th><td>"Searching the web" → "Searched 4 sites" → "Retrieved 2 sources" → "Thought for 26 seconds" → a grounded answer citing bbc.com and apnews.com, correctly describing the real event: 3 killed, 4 wounded, one suspect arrested, second sought</td></tr>
+    <tr><th>Backend log</th><td>Confirms the full pipeline ran end to end — search → fetch → chunk → embed (98 items across 4 sites) → retrieve — not just a UI status line with nothing behind it. Zero exceptions.</td></tr>
+    <tr><th>Latency</th><td>Generation itself (26s) landed inside the Test 28 weights-only baseline range (26/35/20/21s) — search didn't slow down generation. Total wall-clock is longer once search + fetch + embedding (~45–50s, happening before generation starts) is counted — the expected cost of a correct answer instead of a fast wrong one.</td></tr>
+  </table>
+
+  <div class="status-banner status-success">Test 29 Result: PASS. A complete reversal from all five of Test 28's runs, which were 100% confident fabrications with zero citations. Both config changes (Legacy FC on this one model only, Brave as the instance-wide search engine) were left in place as the permanent fix, not reverted.</div>
+
+  <div class="lessons">
+    <h3>Lesson</h3>
+    <p>"The toggle is on and nothing errors" is not the same as "it's working." The most dangerous failure mode here wasn't that search broke — it's that it broke in a way that produced confident, well-formatted, citation-free prose indistinguishable in tone from a correct answer. Diagnosing it required reading the actual backend source, not just watching the UI.</p>
+  </div>
+
+  <h2 id="t2831-test30" class="chapter">Test 30 — A New Wrinkle <a class="anchor-link" href="#t2831-test30" aria-label="Link to this section">#</a></h2>
+  <p>Search now worked — but a different, subtler failure showed up almost immediately. Asked a two-part factual question, DeepSeek-R1 retrieved real sources, cited them, and still got half the answer wrong.</p>
+
+  <table class="spec-table">
+    <tr><th>Prompt</th><td>"Which two teams made it to the 2026 FIFA World Cup Finals?" — a countable, objectively-scorable question (ground truth: Spain and Argentina)</td></tr>
+    <tr><th>Motivating example</th><td>"Retrieved 2 sources," thought 12s, answered "Spain" only — grounded, but incomplete. Categorically different from Test 28's total fabrications.</td></tr>
+  </table>
+
+  <p>Three candidate layers could explain this: <strong>A</strong> — the model's generated search query was too vague; <strong>B</strong> — the right query ran, but retrieval/chunk-selection missed the answer; <strong>C</strong> — the answer was retrieved but the model failed to use it. Three runs, each with the full chat record pulled directly from the API to get the exact generated queries and the exact chunk text actually injected into context — not inferred from the UI.</p>
+
+  <table class="spec-table">
+    <tr><th>Run</th><th>Query quality</th><th>Correct Wikipedia page fetched?</th><th>Answer</th><th>Score</th></tr>
+    <tr><td>1</td><td>Weak — never mentioned "final"</td><td>No — the two most authoritative FIFA pages failed to fetch, silently skipped</td><td>France &amp; Argentina</td><td>1/2</td></tr>
+    <tr><td>2</td><td>Good — explicitly said "Final"</td><td>Yes — but the top-k chunks selected were boilerplate navbox content, not the lead section</td><td>France &amp; Argentina</td><td>1/2</td></tr>
+    <tr><td>3</td><td>Weak — misread "Finals" as "qualifications"</td><td>Yes — but only "Argentina" made it into any retrieved chunk; "Spain" never did</td><td>Mexico &amp; Colombia</td><td>0/2</td></tr>
+  </table>
+
+  <p><strong>Layer attribution, measured:</strong> A (query formulation) was contributory but not sufficient alone — Run 2 had a genuinely good query and still failed. B (retrieval/chunk-selection) showed up in all three runs, in different forms — an outright fetch failure, or the right page fetched but the wrong section selected within it. C (synthesis) was a real, contributing defect in every run — the model never hedged when its grounding was incomplete, instead answering with confident, specific, wrong guesses. Run 1 went further and blended in outside knowledge (a correct venue detail that wasn't in any retrieved text) on top of a wrong guess.</p>
+
+  <div class="status-banner status-success">Test 30 Result: a compound failure across all three candidate layers, not attributable to one — B (retrieval/chunk-selection quality) was the most consistently present defect. Diagnostic only; nothing was changed.</div>
+
+  <h3 id="t2831-correction">A Correction, Made in the Open <a class="anchor-link" href="#t2831-correction" aria-label="Link to this section">#</a></h3>
+  <p>A follow-up review (Test 31, below) caught two errors in Test 30's original write-up, and both were corrected directly in the log entry rather than silently — the mistakes and the fixes are both part of the record:</p>
+  <ol>
+    <li><strong>A scoring error.</strong> Runs 1 and 2 both answered "France and Argentina." Since ground truth is Spain <em>and</em> Argentina, Argentina is a correct name — those runs should have scored 1/2, not the 0/2 originally recorded. The mistake: scoring had drifted into comparing against what earlier runs answered instead of re-checking against ground truth each time.</li>
+    <li><strong>An unsupported claim.</strong> The original write-up called Run 3 "the cleanest isolated proof that synthesis alone is sufficient" to cause failure — reasoning that both correct names were present in context and ignored. A direct string search against Run 3's actual retrieved text found that "Spain" was never present at all — only "Argentina" was. So retrieval had failed there too, not just synthesis. The claim was retracted.</li>
+  </ol>
+  <div class="lessons">
+    <h3>Lesson</h3>
+    <p>Score against ground truth, every time, not against what a previous run said — and verify a strong claim ("synthesis alone is sufficient") against the actual underlying data before writing it down, not just the pattern it looks like from the surface.</p>
+  </div>
+
+  <h2 id="t2831-test31" class="chapter">Test 31 — The Real Number <a class="anchor-link" href="#t2831-test31" aria-label="Link to this section">#</a></h2>
+  <p>Two back-to-back runs of the same prompt, same config, five minutes apart, gave opposite outcomes — one had search never fire at all, the other fired and answered correctly. That meant query generation itself was nondeterministic, and Test 30's three runs were too few to separate real signal from ordinary variance. This test didn't chase a mechanism — it produced a number.</p>
+
+  <table class="spec-table">
+    <tr><th>Prompt</th><td>"Which two national teams played against each other in the 2026 FIFA World Cup final match on July 19, 2026?" — run verbatim, 10 times, each in a fresh chat</td></tr>
+    <tr><th>Query generation rate</th><td><strong>6 of 10</strong> runs generated a search query at all. The other 4 answered from weights alone.</td></tr>
+    <tr><th>Score when search fired (6 runs)</th><td>2/2 × 5, 1/2 × 1, 0/2 × 0 — <strong>every single fired run scored at least half-correct, and 83% scored fully correct</strong></td></tr>
+    <tr><th>Score when search did NOT fire (4 runs)</th><td>0/2 × 4 — <strong>100% failure</strong>, each wrong in a different way (a stale "as of 2023" self-anchor, a wrong host country, two different wrong team pairs)</td></tr>
+  </table>
+
+  <p>This reframes everything Test 30 found. The dominant lever isn't retrieval quality or synthesis quality — it's the roughly 60/40 coin-flip on whether DeepSeek-R1 decides to search at all. Once it does, it's right most of the time. Test 30's 3-run sample simply wasn't large enough to show that: two of its three fired runs happened to land on a wrong second name, which looked like a retrieval/synthesis problem until a 6-run fired sample showed 5 of 6 fully correct.</p>
+
+  <div class="status-banner status-success">Test 31 Result: query-generation rate measured at 6/10. Conditional on firing, DeepSeek-R1's web search is accurate (83% fully correct, 100% at-least-partial). Conditional on not firing, it's uniformly wrong. The bottleneck is whether search fires, not what happens once it does.</div>
+
+  <h2 id="t2831-conclusions" class="chapter">Conclusions <a class="anchor-link" href="#t2831-conclusions" aria-label="Link to this section">#</a></h2>
+  <ol>
+    <li>The original silent failure had two independent causes: a function-calling-mode gate that skipped search entirely for a model that doesn't reliably self-invoke tools, and underneath it, a search backend that wasn't returning usable results even when reached. Both were fixed together (Legacy FC + Brave) and verified with a complete reversal from 100% fabrication to a correctly grounded, cited answer.</li>
+    <li>A second, subtler failure mode surfaced immediately after the fix: search firing and citing sources is not the same as the answer being right. A three-run diagnostic found contributing defects at every candidate layer (query formulation, retrieval/chunk-selection, and synthesis), with retrieval/chunk-selection the most consistently present.</li>
+    <li>A larger, cleaner measurement (N=10, not N=3) reframed that finding: the dominant lever is whether a search query gets generated at all, not what happens once it does. Once search fires, DeepSeek-R1 answers correctly the large majority of the time.</li>
+    <li>Two real mistakes in the Test 30 write-up were caught and corrected in the open, not quietly fixed — a scoring error and an unsupported claim that a later, direct check disproved.</li>
+    <li>A countable, objectively-scorable prompt ("name two X") proved to be a meaningfully better grounding probe than an open narrative prompt — it exposed a failure mode (confident, specific, wrong answers) that a narrative prompt could hedge around invisibly. Recommended as the default probe for future grounding tests.</li>
+  </ol>
+
+  <p><a href="test-log.html">← Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
