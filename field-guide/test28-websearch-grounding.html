@@ -34,7 +34,7 @@
 
   <p><a href="test-log.html">← Test Log</a> &nbsp;·&nbsp; <a href="../index.html">AI Lab Portal Home</a></p>
 
-  <div class="status-banner status-success">Four tests, one investigation: DeepSeek-R1 (7B)'s web search went from silently broken, to fixed and verified, to a subtler failure mode, to a measured explanation for that failure mode — a coin-flip on whether search fires at all, not a retrieval or reasoning defect.</div>
+  <div class="status-banner status-pending"><strong>Partially resolved.</strong> Four tests, one investigation: DeepSeek-R1 (7B)'s web search went from silently broken, to a real fix, to a subtler failure mode, to a measured explanation for that failure mode — a coin-flip on whether search fires at all, not a retrieval or reasoning defect. When search fires, the pipeline works (91% fully correct, pooled across Tests 31–32). It only fires on about 57% of attempts, with nothing in the interface indicating which case you got.</div>
 
   <h2 id="t2831-background" class="chapter">Background <a class="anchor-link" href="#t2831-background" aria-label="Link to this section">#</a></h2>
   <p>DeepSeek-R1 (7B) was added to the lab as a second model alongside qwen3:8b, and web search was enabled for it the same way as everything else on this instance — a master toggle, a search backend, a per-chat switch. Four manual test runs with an identical post-cutoff prompt (a real event the model's training data couldn't know about) all came back as confident, detailed fabrications: no error, no search status line, no citations. That symptom — a toggle that's accepted but silently does nothing — is what kicked off this investigation.</p>
@@ -66,7 +66,7 @@
     <tr><th>Latency</th><td>Generation itself (26s) landed inside the Test 28 weights-only baseline range (26/35/20/21s) — search didn't slow down generation. Total wall-clock is longer once search + fetch + embedding (~45–50s, happening before generation starts) is counted — the expected cost of a correct answer instead of a fast wrong one.</td></tr>
   </table>
 
-  <div class="status-banner status-success">Test 29 Result: PASS. A complete reversal from all five of Test 28's runs, which were 100% confident fabrications with zero citations. Both config changes (Legacy FC on this one model only, Brave as the instance-wide search engine) were left in place as the permanent fix, not reverted.</div>
+  <div class="status-banner status-success">Test 29 Result: PASS. A complete reversal from all five of Test 28's runs, which were 100% confident fabrications with zero citations. Both config changes (Legacy FC on this one model only, Brave as the instance-wide search engine) were left in place as the permanent fix, not reverted. <strong>Caveat added after Tests 31–32:</strong> this result is one successful run, not a reliability measurement — see Test 31 below for how often search actually fires.</div>
 
   <div class="lessons">
     <h3>Lesson</h3>
