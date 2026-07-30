@@ -1,6 +1,8 @@
 /* AI Lab Portal — shared stylesheet
    Friendly engineering-notebook look: blue header, serif body, card-based layout. */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
   --blue-dark: #1F3864;
   --blue-mid: #2E5FA3;
@@ -20,7 +22,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   background: var(--bg);
   color: #222;
   line-height: 1.6;
@@ -38,7 +40,7 @@ a:hover { color: var(--blue-dark); }
 }
 .page-header h1 { font-size: 1.8rem; }
 .page-header .subtitle {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 13px;
   color: #C0D8F0;
   margin-top: 8px;
@@ -46,7 +48,7 @@ a:hover { color: var(--blue-dark); }
 
 .site-nav {
   background: var(--blue-mid);
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 13px;
 }
 .site-nav ul {
@@ -75,13 +77,13 @@ a:hover { color: var(--blue-dark); }
 .container.wide { max-width: 1000px; }
 
 h2 {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   color: var(--blue-dark);
   font-size: 1.3rem;
   margin: 28px 0 12px;
 }
 h3 {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   color: var(--blue-dark);
   font-size: 1.05rem;
   margin: 20px 0 8px;
@@ -127,7 +129,7 @@ ul, ol { margin: 0 0 12px 22px; }
     0 4px 8px rgba(0,0,0,0.12);
 }
 .card h2, .card h3 {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.95rem;
   color: var(--blue-dark);
   text-transform: uppercase;
@@ -137,7 +139,7 @@ ul, ol { margin: 0 0 12px 22px; }
 .card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 6px; }
 .card .card-link {
   display: inline-block;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.85rem;
   text-decoration: none;
   font-weight: bold;
@@ -153,7 +155,7 @@ ul, ol { margin: 0 0 12px 22px; }
   margin: 16px 0 24px;
 }
 .field-guide-toc h3 {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   color: var(--blue-dark);
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -186,7 +188,7 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
   margin: 16px 0 24px;
 }
 .roadmap-panel h3 {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   color: var(--blue-dark);
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -202,7 +204,7 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
   gap: 8px 16px;
 }
 .roadmap-list li {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.9rem;
 }
 .roadmap-list li.done { color: var(--text, #222); }
@@ -230,7 +232,7 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
   padding: 12px 18px;
   margin: 16px 0;
   font-weight: bold;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.95rem;
 }
 .status-success {
@@ -285,7 +287,7 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
   margin: 16px 0;
 }
 .lessons h3 {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   color: var(--amber);
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -304,7 +306,7 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
   font-style: italic;
 }
 .quote-box h3 {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   color: var(--green);
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -321,7 +323,7 @@ h2.chapter .anchor-link:hover { opacity: 1; text-decoration: underline; }
   padding: 40px 16px;
   text-align: center;
   color: #888;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.85rem;
   margin: 12px 0;
 }
@@ -350,7 +352,7 @@ figure.img-25 img { max-width: 25%; margin: 0 auto; }
   }
 }
 figcaption {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.8rem;
   color: var(--muted);
   margin-top: 6px;
@@ -383,7 +385,7 @@ figcaption {
   border-radius: 50%;
 }
 .timeline-date {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.8rem;
   color: var(--muted);
   text-transform: uppercase;
@@ -395,7 +397,7 @@ figcaption {
   width: 100%;
   border-collapse: collapse;
   margin: 12px 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.9rem;
 }
 .spec-table th, .spec-table td {
@@ -425,7 +427,7 @@ figcaption {
 /* Footer */
 .site-footer {
   text-align: center;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 12px;
   color: var(--muted);
   padding: 24px 20px 40px;
@@ -434,7 +436,7 @@ figcaption {
 /* Participation level cards */
 .level-badge {
   display: inline-block;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 0.75rem;
   font-weight: bold;
   color: var(--white);
