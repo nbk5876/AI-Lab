@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Doorbell Is Not the Agent — Home AI Lab Bench Note</title>
+<meta name="description" content="Three AI agents that couldn't message each other, an agent's own brief on why it was impossible, and the one word in that brief that turned out to be wrong.">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#eef1f4;
+  --surface:#ffffff;
+  --ink:#0c1620;
+  --slate:#41576b;
+  --mute:#6d8296;
+  --rule:#d3dbe2;
+  --teal:#1b6e7a;
+  --amber:#9a6410;
+  --amber-bg:#faf2e2;
+  --teal-bg:#e6f0f1;
+
+  --display:"Zilla Slab",Georgia,serif;
+  --body:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.68;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+
+/* ---------- preface ---------- */
+.preface{padding:40px 0 28px;border-bottom:1px solid var(--rule)}
+.preface p{max-width:64ch}
+.preface p:last-child{margin-bottom:0}
+
+/* ---------- hero ---------- */
+.hero{padding:72px 0 40px;border-bottom:1px solid var(--rule)}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--mute);
+  margin:0 0 34px;
+}
+.hero h1{
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(34px,6vw,54px);
+  line-height:1.08;
+  letter-spacing:-.015em;
+  margin:0 0 34px;
+}
+.thesis{margin:0 0 34px;max-width:34ch}
+.thesis p{
+  font-family:var(--display);
+  font-size:clamp(19px,2.6vw,25px);
+  line-height:1.42;
+  margin:0 0 10px;
+}
+.thesis .wrong{color:var(--mute);text-decoration:line-through;text-decoration-thickness:1.5px}
+.thesis .right{color:var(--ink);font-weight:600}
+.standfirst{
+  font-size:18px;
+  color:var(--slate);
+  max-width:60ch;
+  margin:0 0 34px;
+}
+.meta{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--mute);
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 22px;
+  margin:0;
+}
+
+/* ---------- reveal ---------- */
+.rise{opacity:0;transform:translateY(10px);animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards}
+.rise:nth-child(1){animation-delay:.05s}
+.rise:nth-child(2){animation-delay:.16s}
+.rise:nth-child(3){animation-delay:.27s}
+.rise:nth-child(4){animation-delay:.38s}
+.rise:nth-child(5){animation-delay:.49s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .rise{animation:none;opacity:1;transform:none}
+}
+
+/* ---------- structure ---------- */
+main{padding:8px 0 20px}
+
+h2{
+  font-family:var(--display);
+  font-weight:600;
+  font-size:26px;
+  line-height:1.24;
+  letter-spacing:-.008em;
+  margin:56px 0 4px;
+}
+h3{
+  font-family:var(--body);
+  font-weight:600;
+  font-size:16px;
+  margin:30px 0 2px;
+}
+p{margin:0 0 18px;max-width:68ch}
+a{color:var(--teal);text-decoration-thickness:1px;text-underline-offset:2px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+strong{font-weight:600}
+code{
+  font-family:var(--mono);
+  font-size:.87em;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:1px 5px;
+  white-space:nowrap;
+}
+
+/* ---------- status margin (signature) ---------- */
+.block{
+  display:grid;
+  grid-template-columns:104px 1fr;
+  gap:0 34px;
+  margin:0 0 6px;
+}
+.block > .tag{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding-top:7px;
+  color:var(--mute);
+  border-top:2px solid var(--rule);
+  align-self:start;
+  margin-top:6px;
+}
+.block > .content > *:first-child{margin-top:0}
+.block.verified > .tag{color:var(--teal);border-top-color:var(--teal)}
+.block.open > .tag{color:var(--amber);border-top-color:var(--amber)}
+.block.call > .tag{color:var(--ink);border-top-color:var(--ink)}
+
+/* ---------- key: explains the margin ---------- */
+.key{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:20px 24px;
+  margin:36px 0 8px;
+}
+.key h4{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--mute);
+  margin:0 0 14px;
+  font-weight:500;
+}
+.key dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 20px;align-items:baseline}
+.key dt{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.key dd{margin:0;font-size:15px;color:var(--slate)}
+.k-verified{color:var(--teal)}
+.k-open{color:var(--amber)}
+.k-call{color:var(--ink)}
+.k-none{color:var(--mute)}
+
+/* ---------- pull ---------- */
+.pull{
+  font-family:var(--display);
+  font-size:clamp(20px,2.7vw,26px);
+  line-height:1.4;
+  color:var(--ink);
+  border-left:3px solid var(--teal);
+  padding:2px 0 2px 24px;
+  margin:34px 0;
+  max-width:46ch;
+}
+
+/* ---------- figures ---------- */
+figure{
+  margin:38px 0;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:22px 22px 16px;
+}
+figure img{display:block;width:100%;height:auto}
+figcaption{
+  font-size:14.5px;
+  color:var(--slate);
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid var(--rule);
+}
+figcaption b{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--mute);
+  font-weight:500;
+  display:block;
+  margin-bottom:5px;
+}
+
+/* ---------- lists ---------- */
+ul.plain{margin:0 0 18px;padding-left:20px;max-width:68ch}
+ul.plain li{margin-bottom:9px}
+ul.plain li::marker{color:var(--mute)}
+
+/* ---------- checks ---------- */
+.checks{margin:26px 0 8px;border-top:1px solid var(--rule)}
+.check{
+  display:grid;
+  grid-template-columns:58px 1fr;
+  gap:0 22px;
+  padding:18px 0;
+  border-bottom:1px solid var(--rule);
+}
+.check .id{
+  font-family:var(--mono);
+  font-size:14px;
+  font-weight:500;
+  color:var(--teal);
+  padding-top:1px;
+}
+.check.pending .id{color:var(--amber)}
+.check h3{margin:0 0 4px}
+.check p{margin:0;font-size:15.5px;color:var(--slate)}
+
+/* ---------- ruled-out table ---------- */
+.ruled{margin:26px 0 8px;border-top:1px solid var(--rule)}
+.ruled-row{
+  display:grid;
+  grid-template-columns:minmax(150px,210px) 1fr;
+  gap:4px 28px;
+  padding:16px 0;
+  border-bottom:1px solid var(--rule);
+}
+.ruled-row dt{font-weight:600;font-size:15.5px}
+.ruled-row dd{margin:0;font-size:15.5px;color:var(--slate)}
+
+/* ---------- banner ---------- */
+.banner{
+  background:var(--amber-bg);
+  border:1px solid #e6d3ac;
+  border-radius:4px;
+  padding:22px 26px;
+  margin:44px 0 8px;
+}
+.banner h4{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin:0 0 10px;
+  font-weight:500;
+}
+.banner p{margin:0;color:#4a3c1d;max-width:64ch}
+
+/* ---------- footer ---------- */
+footer{
+  border-top:1px solid var(--rule);
+  margin-top:60px;
+  padding:30px 0 70px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--mute);
+  line-height:1.9;
+}
+footer a{color:var(--mute)}
+
+/* ---------- mobile ---------- */
+@media (max-width:720px){
+  body{font-size:16.5px}
+  .hero{padding:48px 0 32px}
+  .block{grid-template-columns:1fr;gap:0}
+  .block > .tag{
+    border-top:none;
+    border-left:2px solid var(--rule);
+    padding:0 0 0 10px;
+    margin:0 0 10px;
+  }
+  .block.verified > .tag{border-left-color:var(--teal)}
+  .block.open > .tag{border-left-color:var(--amber)}
+  .block.call > .tag{border-left-color:var(--ink)}
+  .key dl{grid-template-columns:1fr;gap:3px}
+  .key dd{margin-bottom:10px}
+  .ruled-row{grid-template-columns:1fr}
+  .check{grid-template-columns:1fr;gap:6px}
+  figure{padding:14px 14px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<section class="preface">
+  <p class="eyebrow">A note from the human running this lab</p>
+  <p>After several weeks of using three separate Claude instances, a problem developed: each instance has a tendency to add complexity to any discussion, and after a turn or two, the scope has expanded well past what was intended.</p>
+
+  <figure>
+    <img src="../images/AI-Lab.png" alt="Diagram of the lab as it exists today: the human (with two cats) prompts Claude Code CC1 on the HP Desktop [2], which talks to Claude Code CC2 on Lab PC 2 / Node A [3] through the cc-sync folder; CC2 configures Open WebUI and both the qwen3 [4] and DeepSeek [5] models on the Beelink SER9, and is separately consulted by Claude in the Cloud, CiC [1]; a mobile phone reaches Open WebUI and the LLMs directly over its own AI Prompts path.">
+    <figcaption><b>The lab as it exists today</b>Three Claude instances (CC1, CC2, CiC) plus a mobile phone, coordinating through cc-sync, direct configuration, and one human relaying context between them.</figcaption>
+  </figure>
+
+  <p>The issue &mdash; or one of the issues &mdash; isn&rsquo;t really connectivity between the instances; cc-sync always delivered files reliably. It&rsquo;s complexity: each instance tends to compensate for structural gaps with more machinery rather than less. On a side note, the human needs to be prepared to take charge of the conversation, but that often requires real work just to understand what the instances are talking about.</p>
+  <p>The instances were asked to design a better method for communicating &mdash; one that wouldn&rsquo;t require the human to take an action for a message to be sent. The current communication channel also only connects CC1 and CC2, so it would be desirable for any updated environment to include the cloud instance of Claude as well.</p>
+  <p>This page presents the result of a dialogue with CC1 about issues with the current communication method and notes on how to make things better. CC1&rsquo;s notes were passed to the cloud instance of Claude, CiC, where they were turned into requirements for an upgraded communications channel for the lab.</p>
+</section>
+
+<header class="hero">
+  <p class="eyebrow rise">Home AI Lab · Bench note · 1 August 2026</p>
+  <h1 class="rise">The doorbell is not the agent</h1>
+  <div class="thesis rise">
+    <p class="wrong">Nothing runs in between messages, so a listener is impossible.</p>
+    <p class="right">Nothing needs to run in between messages. The doorbell does.</p>
+  </div>
+  <p class="standfirst rise">Three AI agents in a small home lab could pass files to each other but never notice one had arrived. One of the agents wrote up a careful brief explaining why the problem was structural. Most of it was right. The part that was wrong changed the whole design.</p>
+  <p class="meta rise">
+    <span>Status: nothing built</span>
+    <span>Verification pending</span>
+    <span>Read time ~7 min</span>
+  </p>
+</header>
+
+<main>
+
+<div class="key">
+  <h4>How to read the margin</h4>
+  <dl>
+    <dt class="k-verified">Verified</dt>
+    <dd>Confirmed in vendor documentation or measured on the lab's own hardware.</dd>
+    <dt class="k-open">Open</dt>
+    <dd>A working assumption or a queued check. Not yet established.</dd>
+    <dt class="k-call">Judgement</dt>
+    <dd>A choice made deliberately, where a different lab could reasonably choose otherwise.</dd>
+    <dt class="k-none">No tag</dt>
+    <dd>Narrative or description, carrying no claim.</dd>
+  </dl>
+</div>
+
+<h2>The setup</h2>
+
+<p>The lab is two consumer machines running local language models — a mini-PC doing inference, a desktop doing orchestration — plus a chat session in the browser that acts as a filter and synthesiser. Three participants, informally named CC1 (desktop), CC2 (inference node), and CiC (the browser session).</p>
+
+<p>They coordinate through a shared folder called <code>cc-sync</code>, which lives in OneDrive and syncs between the two machines. An agent writes a file, drops a marker, and the next agent picks it up.</p>
+
+<div class="block">
+  <div class="tag">Description</div>
+  <div class="content">
+    <p>That works, in the sense that files reliably arrive. What it never did was tell anyone they had arrived.</p>
+  </div>
+</div>
+
+<figure>
+  <img src="images/lab-curr-env.png" alt="Diagram of the current environment: three boxes labelled HP PC containing CC1, Lab PC 2 containing CC2, and Cloud containing CiC, with a shared cc-sync folder on OneDrive sitting between the two local machines.">
+  <figcaption><b>Current environment</b>Two local machines and one cloud chat session, coordinating through a shared folder. The folder is durable and reliable. It is also completely passive.</figcaption>
+</figure>
+
+<h2>Why a turn only ever happened on purpose</h2>
+
+<p>An agent turn in this setup begins because something outside the agent starts it. A person types a message, or a scheduled prompt is injected into a session that is already open. The agent runs, reads the folder, writes its output back, and exits.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>Between turns, no agent process exists. There is nothing running, nothing holding a socket, nothing blocked waiting on an event. A reply can sit in the shared folder indefinitely, perfectly delivered, and no one will know.</p>
+  </div>
+</div>
+
+<p class="pull">The folder is a mailbox, not a messenger.</p>
+
+<p>The practical cost was that every exchange between the two machines needed a human to notice and relay it, or waited for the next scheduled tick. Nobody wanted that, and an earlier attempt at a fix had just been dismantled.</p>
+
+<h2>The brief that argued against itself</h2>
+
+<p>After that teardown, CC1 — the orchestration agent — was asked to write up why the watcher system had to go. It produced a careful document. It stated the constraint precisely. It listed three candidate directions without picking one. It flagged an open question it could not answer and explicitly declined to guess. It also noted, unprompted, that it had earlier made a configuration change nobody had asked for, and that it had reverted it.</p>
+
+<p>It closed by saying it did not think it was its place to tell anyone the idea was impossible, and asked for a second opinion instead.</p>
+
+<div class="block call">
+  <div class="tag">Judgement</div>
+  <div class="content">
+    <p>That is a better piece of engineering writing than most humans produce under the same conditions. It is also where the interesting failure was hiding — not in what the brief got wrong about the world, but in one assumption it never examined.</p>
+  </div>
+</div>
+
+<h2>The assumption</h2>
+
+<p>The brief treated <em>no persistent agent</em> as fatal. If nothing is running, nothing can be listening, so a listener cannot exist. Every candidate direction it proposed was shaped by that.</p>
+
+<p>But the agent does not need to be persistent. The <strong>doorbell</strong> needs to be persistent.</p>
+
+<p>A background service — a plain program, no language model involved, no tokens, no judgement — can sit on each machine and wait on a filesystem or network event. When one fires, it checks a stop-file and then launches an agent process. It is a real listener in the daemon sense: something is genuinely blocked waiting. It is also neither a human nor a scheduled job, which is exactly what the requirement demanded.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>The brief undersold its own best option a second way. It assumed each such invocation would start a blank agent with no shared history. It won't: the command-line agent's print mode supports resuming a specific prior session by ID, and the documentation states that full conversation history is restored on resume. The service can therefore wake the <em>same</em> agent, mid-thread, rather than introducing a stranger to the conversation.</p>
+  </div>
+</div>
+
+<p class="pull">A dumb, always-on process ringing a smart, intermittent one.</p>
+
+<figure>
+  <img src="images/lab-next-env.png" alt="Diagram of the target environment: the same three boxes, but each local machine now also contains an always-on notify service with an arrow labelled claude -p --resume pointing up into the agent. A direct Tailscale link runs between the two machines, with cc-sync now sitting below it as an archive.">
+  <figcaption><b>Target environment</b>Each machine gains an always-on service that invokes its agent on message arrival. Messages travel directly between machines over the private network; the shared folder is demoted from delivery path to archive.</figcaption>
+</figure>
+
+<h2>The wall that is real</h2>
+
+<p>The third participant is different in kind. CiC is a browser chat session, and there is no inbound channel to one. No event on a local network causes a chat conversation to receive a turn. That is not a hard engineering problem — it is an absent capability.</p>
+
+<div class="block call">
+  <div class="tag">Judgement</div>
+  <div class="content">
+    <p>Which left a genuine fork: replace that participant with a third command-line agent, making the whole loop autonomous, or keep the chat session and accept a permanent human in that one leg.</p>
+    <p>The lab kept the chat session — for its web access, its accumulated context, and, honestly, because it is the interface actually being used. So the requirement split. Two legs run autonomously; the third keeps a person in it deliberately, and the goal there becomes reducing effort rather than removing it: two double-clicks and a paste, instead of hunting through a downloads folder and naming files by hand.</p>
+  </div>
+</div>
+
+<h2>What was ruled out, and why</h2>
+
+<dl class="ruled">
+  <div class="ruled-row">
+    <dt>Cloud-hosted routines</dt>
+    <dd>Genuinely promising — they support event triggers over HTTP, not only schedules, and run independently of any local machine. Rejected on daily run caps, which are far too low for agents that talk to each other frequently.</dd>
+  </div>
+  <div class="ruled-row">
+    <dt>Cloud file connector</dt>
+    <dd>Would have let a cloud agent reach the shared folder. Read-only, fires on no events, and requires a work account tied to a corporate directory. Closed on all three counts.</dd>
+  </div>
+  <div class="ruled-row">
+    <dt>File sync as transport</dt>
+    <dd>Both machines already share a private network link. Routing messages through a cloud file-sync service instead adds unbounded latency to every hop for no benefit. The folder stays as the archive.</dd>
+  </div>
+  <div class="ruled-row">
+    <dt>A standalone API bot</dt>
+    <dd>Truly always-on, but it would not be any of the three agents — no shared context, no accumulated history, its own credentials and its own hand-built guardrails. A different system wearing the same name.</dd>
+  </div>
+</dl>
+
+<h2>What gets measured before anything gets built</h2>
+
+<p>The lab has a standing rule, learned the hard way: no causal explanation goes into the documentation until it has been measured. An earlier slow-response problem was confidently attributed to model reloading for three days before a timing test showed the reload took four and a half seconds and the real cost was somewhere else entirely.</p>
+
+<p>So the design above is not being built yet. Six checks come first.</p>
+
+<div class="checks">
+  <div class="check">
+    <div class="id">V1</div>
+    <div>
+      <h3>Headless invocation works</h3>
+      <p>Does the agent actually run from a plain shell on both machines, return valid structured output, and hand back a session identifier? Also yields the lab's first measurement of time-to-turn.</p>
+    </div>
+  </div>
+  <div class="check">
+    <div class="id">V2</div>
+    <div>
+      <h3>Session resume restores context</h3>
+      <p>Plant a fact that exists nowhere on disk, resume the session from a separate shell, and ask for it back. Separates "a stranger reads a file" from "the agent picks up where it left off."</p>
+    </div>
+  </div>
+  <div class="check">
+    <div class="id">V3</div>
+    <div>
+      <h3>Invocation under a service account</h3>
+      <p>The load-bearing one. A task set to run whether or not a user is logged in executes under a different profile — different home directory, possibly no access to stored credentials. If this fails, the doorbell cannot ring the agent and the whole design is invalid.</p>
+    </div>
+  </div>
+  <div class="check">
+    <div class="id">V4</div>
+    <div>
+      <h3>Network reachability</h3>
+      <p>Throwaway listener on each machine, confirm both directions connect, measure round-trip latency, note any firewall change required.</p>
+    </div>
+  </div>
+  <div class="check">
+    <div class="id">V5</div>
+    <div>
+      <h3>Sustained invocation cost</h3>
+      <p>Six sequential turns against one resumed session, watching for throttling. Agents in a loop consume capacity considerably faster than a person typing.</p>
+    </div>
+  </div>
+  <div class="check pending">
+    <div class="id">V6</div>
+    <div>
+      <h3>Concurrent session access</h3>
+      <p>Added late. If a person is mid-conversation with an agent when a message arrives, two processes want the same session at once. Nobody knows yet whether that queues, errors, or corrupts state — and the answer decides whether each machine runs one agent or two.</p>
+    </div>
+  </div>
+</div>
+
+<div class="block open">
+  <div class="tag">Open</div>
+  <div class="content">
+    <p>V1 through V3 are sequential: V2 is meaningless if V1 fails, V3 is meaningless if V2 fails. V4 and V5 are independent. V6 is the newest and the least considered.</p>
+  </div>
+</div>
+
+<h2>The requirement, as it currently stands</h2>
+
+<h3>R1 — the two local agents, autonomous</h3>
+<p>They send messages to each other and act on them with no human present at the moment of delivery and no scheduled polling as the trigger. Arrival of a message is itself the trigger.</p>
+
+<h3>R2 — the chat leg, human-mediated by choice</h3>
+<p>A person stays in this leg deliberately. The requirement is to make moving content across it as easy as possible, not to remove the person from it.</p>
+
+<h3>Acceptance criteria, both legs</h3>
+<ul class="plain">
+  <li><strong>Deliver</strong> — the message reaches its peer intact and in order.</li>
+  <li><strong>Wake</strong> — arrival starts a turn on its own, or surfaces without anyone hunting for it.</li>
+  <li><strong>Acknowledge</strong> — the sender can tell whether the message was picked up.</li>
+  <li><strong>Log</strong> — every exchange is inspectable afterwards, not only in flight.</li>
+</ul>
+
+<h3>Where a human checkpoint stays regardless</h3>
+<p>Agents talking to each other: automatic. Anything that publishes — to the public site, to the repository, or to the test log — still gets approved by a person. The original design principle was notify-then-wait rather than auto-execute, adopted because of injection risk. Relaxing it for conversation while keeping it for publication seems like the honest trade, and the realistic failure mode here is less a poisoned message than two agents talking to each other all night.</p>
+
+<div class="banner">
+  <h4>Current status</h4>
+  <p>Nothing is built. The verification task is written and waiting; the design will be specified against measured numbers rather than assumptions. If V3 fails, most of this page becomes a description of an approach that did not work — which is a perfectly good outcome to have found out cheaply.</p>
+</div>
+
+<h2>The part worth keeping</h2>
+
+<p>The failure here was not that an AI agent got something wrong. The brief was careful, well-sourced, honest about its own mistakes, and correct about the constraint. It failed in a subtler way: it accepted the shape of the problem it had been handed and reasoned impeccably inside it.</p>
+
+<p>Which is a fair description of how most people get stuck too. The useful move was not more knowledge. It was asking which noun in the requirement had been quietly assumed — and noticing that "listener" had been read as "listening agent" by everyone in the conversation, including the humans.</p>
+
+</main>
+
+<footer>
+  <div>Home AI Lab — bench note, 1 August 2026</div>
+  <div>Diagrams and findings from an ongoing personal project on local model deployment.</div>
+  <div>Claims marked <span class="k-open">Open</span> are not yet established and should not be cited as findings.</div>
+  <div><a href="index.html">All Bench Notes</a> &middot; <a href="../index.html">AI Lab Portal Home</a></div>
+</footer>
+
+</div>
+</body>
+</html>

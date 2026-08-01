@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Software — AI Lab Portal</title>
+<title>Bench Notes — AI Lab Portal</title>
 <link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
@@ -14,8 +14,8 @@
 <body>
 
 <header class="page-header">
-  <h1>Software</h1>
-  <div class="subtitle">The tools running the lab</div>
+  <h1>Bench Notes</h1>
+  <div class="subtitle">Standalone investigative write-ups — one problem, worked through in the open</div>
 </header>
 
 <nav class="site-nav"><ul>
@@ -25,7 +25,7 @@
   <li><a href="../build-journal/index.html">Build Journal</a></li>
   <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
   <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
-  <li><a href="../bench-notes/index.html">Bench Notes</a></li>
+  <li><a href="index.html">Bench Notes</a></li>
   <li><a href="../hardware/index.html">Hardware</a></li>
   <li><a href="../models/index.html">Models</a></li>
   <li><a href="../join/index.html">Join the AI Lab</a></li>
@@ -33,26 +33,13 @@
 
 <div class="container">
 
-  <div class="grid">
-    <div class="card">
-      <h2>Ollama</h2>
-      <p>Model manager and local server. Downloads, stores, and runs LLMs, and exposes a local API for front ends to talk to.</p>
-    </div>
-    <div class="card">
-      <h2>Open WebUI</h2>
-      <p>Browser-based chat front end. Auto-detects models running in Ollama and gives them a familiar chat interface.</p>
-    </div>
-    <div class="card">
-      <h2>Claude Code</h2>
-      <p>The engineering assistant building and documenting the lab itself — installing software, writing this site, keeping the journal.</p>
-    </div>
-    <div class="card">
-      <h2>Tailscale</h2>
-      <p>Private mesh VPN connecting the lab's nodes securely, without exposing anything to the public internet.</p>
-    </div>
-  </div>
+  <p>Longer-form than the Engineering Notebook, more self-contained than a Build Journal entry — each Bench Note tackles one specific problem end to end: the setup, what was tried, what was measured, and what's still open. Each note is its own standalone page with its own visual style, since the subject matter varies more than a shared template can comfortably hold.</p>
 
-  <p>See the <a href="../engineering-notebook/index.html">Engineering Notebook</a> for install-time observations on each of these, and <a href="../architecture/index.html">Architecture</a> for how they fit together across both nodes.</p>
+  <div class="timeline-entry">
+    <div class="timeline-date">August 1, 2026</div>
+    <h2><a href="notify-v2-bench-note.html">The Doorbell Is Not the Agent</a></h2>
+    <p>Three AI agents that could pass files to each other but never notice one had arrived — an agent's own brief on why that was structurally impossible, and the one assumption in that brief that turned out to be wrong. Includes the verification plan for a proposed fix, not yet built.</p>
+  </div>
 
 </div>
 
