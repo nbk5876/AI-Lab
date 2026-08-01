@@ -324,14 +324,14 @@ footer a{color:var(--mute)}
 
 <section class="preface">
   <p class="eyebrow">A note from the human running this lab</p>
-  <p>After several weeks of using three separate Claude instances, a problem developed: each instance has a tendency to add complexity to any discussion, and after a turn or two, the scope has expanded well past what was intended.</p>
+  <p>After several weeks of using three separate Claude instances, a problem surfaced: each instance has a tendency to add complexity to any discussion, and after a turn or two, the scope has expanded well past what was intended.</p>
 
   <figure>
     <img src="../images/AI-Lab.png" alt="Diagram of the lab as it exists today: the human (with two cats) prompts Claude Code CC1 on the HP Desktop [2], which talks to Claude Code CC2 on Lab PC 2 / Node A [3] through the cc-sync folder; CC2 configures Open WebUI and both the qwen3 [4] and DeepSeek [5] models on the Beelink SER9, and is separately consulted by Claude in the Cloud, CiC [1]; a mobile phone reaches Open WebUI and the LLMs directly over its own AI Prompts path.">
     <figcaption><b>The lab as it exists today</b>Three Claude instances (CC1, CC2, CiC) plus a mobile phone, coordinating through cc-sync, direct configuration, and one human relaying context between them.</figcaption>
   </figure>
 
-  <p>The issue &mdash; or one of the issues &mdash; isn&rsquo;t really connectivity between the instances; cc-sync always delivered files reliably. It&rsquo;s complexity: each instance tends to compensate for structural gaps with more machinery rather than less. On a side note, the human needs to be prepared to take charge of the conversation, but that often requires real work just to understand what the instances are talking about.</p>
+  <p>The issue &mdash; or one of the issues &mdash; isn&rsquo;t really connectivity between the instances because cc-sync always delivered files reliably. The issue was growing complexity: each AI instance tends to compensate for structural gaps with more machinery rather than less. On a side note, the human needs to be prepared to take charge of the conversation, but that often requires real work just to understand what the instances are talking about.</p>
   <p>The instances were asked to design a better method for communicating &mdash; one that wouldn&rsquo;t require the human to take an action for a message to be sent. The current communication channel also only connects CC1 and CC2, so it would be desirable for any updated environment to include the cloud instance of Claude as well.</p>
   <p>This page presents the result of a dialogue with CC1 about issues with the current communication method and notes on how to make things better. CC1&rsquo;s notes were passed to the cloud instance of Claude, CiC, where they were turned into requirements for an upgraded communications channel for the lab.</p>
 </section>
