@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Specs for a Workflow That Didn't Exist — Home AI Lab Bench Note</title>
+<meta name="description" content="A message channel between three AI agents got built and tested in an evening. Every step was verified. The sentence underneath all of it was never checked.">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#eef1f4;
+  --surface:#ffffff;
+  --ink:#0c1620;
+  --slate:#41576b;
+  --mute:#6d8296;
+  --rule:#d3dbe2;
+  --teal:#1b6e7a;
+  --amber:#9a6410;
+  --amber-bg:#faf2e2;
+  --teal-bg:#e6f0f1;
+
+  --display:"Zilla Slab",Georgia,serif;
+  --body:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.68;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+
+/* ---------- preface ---------- */
+.preface{padding:40px 0 28px;border-bottom:1px solid var(--rule)}
+.preface p{max-width:64ch}
+.preface p:last-child{margin-bottom:0}
+
+/* ---------- hero ---------- */
+.hero{padding:72px 0 40px;border-bottom:1px solid var(--rule)}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--mute);
+  margin:0 0 34px;
+}
+.hero h1{
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(34px,6vw,54px);
+  line-height:1.08;
+  letter-spacing:-.015em;
+  margin:0 0 34px;
+}
+.thesis{margin:0 0 34px;max-width:34ch}
+.thesis p{
+  font-family:var(--display);
+  font-size:clamp(19px,2.6vw,25px);
+  line-height:1.42;
+  margin:0 0 10px;
+}
+.thesis .wrong{color:var(--mute);text-decoration:line-through;text-decoration-thickness:1.5px}
+.thesis .right{color:var(--ink);font-weight:600}
+.standfirst{
+  font-size:18px;
+  color:var(--slate);
+  max-width:60ch;
+  margin:0 0 34px;
+}
+.meta{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--mute);
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 22px;
+  margin:0;
+}
+
+/* ---------- reveal ---------- */
+.rise{opacity:0;transform:translateY(10px);animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards}
+.rise:nth-child(1){animation-delay:.05s}
+.rise:nth-child(2){animation-delay:.16s}
+.rise:nth-child(3){animation-delay:.27s}
+.rise:nth-child(4){animation-delay:.38s}
+.rise:nth-child(5){animation-delay:.49s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .rise{animation:none;opacity:1;transform:none}
+}
+
+/* ---------- structure ---------- */
+main{padding:8px 0 20px}
+
+h2{
+  font-family:var(--display);
+  font-weight:600;
+  font-size:26px;
+  line-height:1.24;
+  letter-spacing:-.008em;
+  margin:56px 0 4px;
+}
+h3{
+  font-family:var(--body);
+  font-weight:600;
+  font-size:16px;
+  margin:30px 0 2px;
+}
+p{margin:0 0 18px;max-width:68ch}
+a{color:var(--teal);text-decoration-thickness:1px;text-underline-offset:2px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+strong{font-weight:600}
+code{
+  font-family:var(--mono);
+  font-size:.87em;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:1px 5px;
+  white-space:nowrap;
+}
+
+/* ---------- status margin (signature) ---------- */
+.block{
+  display:grid;
+  grid-template-columns:104px 1fr;
+  gap:0 34px;
+  margin:0 0 6px;
+}
+.block > .tag{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding-top:7px;
+  color:var(--mute);
+  border-top:2px solid var(--rule);
+  align-self:start;
+  margin-top:6px;
+}
+.block > .content > *:first-child{margin-top:0}
+.block.verified > .tag{color:var(--teal);border-top-color:var(--teal)}
+.block.open > .tag{color:var(--amber);border-top-color:var(--amber)}
+.block.call > .tag{color:var(--ink);border-top-color:var(--ink)}
+
+/* ---------- key: explains the margin ---------- */
+.key{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:20px 24px;
+  margin:36px 0 8px;
+}
+.key h4{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--mute);
+  margin:0 0 14px;
+  font-weight:500;
+}
+.key dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 20px;align-items:baseline}
+.key dt{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.key dd{margin:0;font-size:15px;color:var(--slate)}
+.k-verified{color:var(--teal)}
+.k-open{color:var(--amber)}
+.k-call{color:var(--ink)}
+.k-none{color:var(--mute)}
+
+/* ---------- pull ---------- */
+.pull{
+  font-family:var(--display);
+  font-size:clamp(20px,2.7vw,26px);
+  line-height:1.4;
+  color:var(--ink);
+  border-left:3px solid var(--teal);
+  padding:2px 0 2px 24px;
+  margin:34px 0;
+  max-width:46ch;
+}
+
+/* ---------- figures ---------- */
+figure{
+  margin:38px 0;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:22px 22px 16px;
+}
+figure img{display:block;width:100%;height:auto}
+figcaption{
+  font-size:14.5px;
+  color:var(--slate);
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid var(--rule);
+}
+figcaption b{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--mute);
+  font-weight:500;
+  display:block;
+  margin-bottom:5px;
+}
+
+/* ---------- lists ---------- */
+ul.plain{margin:0 0 18px;padding-left:20px;max-width:68ch}
+ul.plain li{margin-bottom:9px}
+ul.plain li::marker{color:var(--mute)}
+
+/* ---------- checks ---------- */
+.checks{margin:26px 0 8px;border-top:1px solid var(--rule)}
+.check{
+  display:grid;
+  grid-template-columns:58px 1fr;
+  gap:0 22px;
+  padding:18px 0;
+  border-bottom:1px solid var(--rule);
+}
+.check .id{
+  font-family:var(--mono);
+  font-size:14px;
+  font-weight:500;
+  color:var(--teal);
+  padding-top:1px;
+}
+.check.pending .id{color:var(--amber)}
+.check h3{margin:0 0 4px}
+.check p{margin:0;font-size:15.5px;color:var(--slate)}
+
+/* ---------- ruled-out table ---------- */
+.ruled{margin:26px 0 8px;border-top:1px solid var(--rule)}
+.ruled-row{
+  display:grid;
+  grid-template-columns:minmax(150px,210px) 1fr;
+  gap:4px 28px;
+  padding:16px 0;
+  border-bottom:1px solid var(--rule);
+}
+.ruled-row dt{font-weight:600;font-size:15.5px}
+.ruled-row dd{margin:0;font-size:15.5px;color:var(--slate)}
+
+/* ---------- banner ---------- */
+.banner{
+  background:var(--amber-bg);
+  border:1px solid #e6d3ac;
+  border-radius:4px;
+  padding:22px 26px;
+  margin:44px 0 8px;
+}
+.banner h4{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin:0 0 10px;
+  font-weight:500;
+}
+.banner p{margin:0;color:#4a3c1d;max-width:64ch}
+
+/* ---------- footer ---------- */
+footer{
+  border-top:1px solid var(--rule);
+  margin-top:60px;
+  padding:30px 0 70px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--mute);
+  line-height:1.9;
+}
+footer a{color:var(--mute)}
+
+/* ---------- mobile ---------- */
+@media (max-width:720px){
+  body{font-size:16.5px}
+  .hero{padding:48px 0 32px}
+  .block{grid-template-columns:1fr;gap:0}
+  .block > .tag{
+    border-top:none;
+    border-left:2px solid var(--rule);
+    padding:0 0 0 10px;
+    margin:0 0 10px;
+  }
+  .block.verified > .tag{border-left-color:var(--teal)}
+  .block.open > .tag{border-left-color:var(--amber)}
+  .block.call > .tag{border-left-color:var(--ink)}
+  .key dl{grid-template-columns:1fr;gap:3px}
+  .key dd{margin-bottom:10px}
+  .ruled-row{grid-template-columns:1fr}
+  .check{grid-template-columns:1fr;gap:6px}
+  figure{padding:14px 14px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<section class="preface">
+  <p class="eyebrow">A note from the human running this lab</p>
+  <p>The previous bench note ended with a design and no build. It described a message channel for three AI agents that couldn&rsquo;t tell each other anything had arrived, split the requirement in two, and stopped &mdash; deliberately &mdash; before writing any code.</p>
+  <p>This note covers the evening the second half got built. It took a few hours, it works, and it was tested more carefully than most things in this lab. It also contains the most instructive mistake I&rsquo;ve seen these agents make, and the mistake is not the kind people usually worry about.</p>
+  <p>Nothing was hallucinated. Nothing was unsafe. Every claim was checked. Three specifications were written against a description of how I work that was simply not true, and nobody &mdash; including me &mdash; noticed for several hours.</p>
+</section>
+
+<header class="hero">
+  <p class="eyebrow rise">Home AI Lab · Bench note · 3 August 2026</p>
+  <h1 class="rise">Three specs for a workflow that didn&rsquo;t exist</h1>
+  <div class="thesis rise">
+    <p class="wrong">Verify every step and the result will be right.</p>
+    <p class="right">Every step was verified. Nobody verified the sentence underneath the steps.</p>
+  </div>
+  <p class="standfirst rise">A file-transfer channel between three AI agents was built and tested in an evening. Partial-write handling, duplicate detection, clipboard fallbacks, a 31 MB stress test. All of it correct. All of it aimed at a workflow the human had stopped using weeks earlier.</p>
+  <p class="meta rise">
+    <span>Status: built and tested</span>
+    <span>One leg unverified</span>
+    <span>Read time ~8 min</span>
+  </p>
+</header>
+
+<main>
+
+<div class="key">
+  <h4>How to read the margin</h4>
+  <dl>
+    <dt class="k-verified">Verified</dt>
+    <dd>Confirmed in vendor documentation or measured on the lab's own hardware.</dd>
+    <dt class="k-open">Open</dt>
+    <dd>A working assumption or a queued check. Not yet established.</dd>
+    <dt class="k-call">Judgement</dt>
+    <dd>A choice made deliberately, where a different lab could reasonably choose otherwise.</dd>
+    <dt class="k-none">No tag</dt>
+    <dd>Narrative or description, carrying no claim.</dd>
+  </dl>
+</div>
+
+<h2>What was supposed to get built</h2>
+
+<p>The lab runs three Claude instances. CC1 orchestrates on a desktop PC. CC2 runs on the inference machine alongside the local models. CiC is a browser chat session that acts as a filter and synthesiser &mdash; it sees the other two only through whatever the human carries across.</p>
+
+<p>The earlier design split the problem in two. The two command-line agents would eventually wake each other automatically. The browser session would keep a human in the loop deliberately, because there is no way to deliver an event into a chat conversation, and the goal there was to reduce effort rather than remove the person.</p>
+
+<p>This note is about that second half.</p>
+
+<figure>
+  <img src="images/lab-services-and-connections.png" alt="Diagram of the lab's message paths. The desktop PC contains the human, a Downloads folder, a Watcher service, a cc-sync folder and the clipboard, plus CC1. Lab PC 2 contains CC2, its own synced copy of cc-sync, Open WebUI, Ollama and two local models. A cloud box holds CiC. Red arrows show inbound legs one and two: cloud to Downloads, then Downloads to cc-sync via the watcher. Further red arrows show outbound legs one and two: cc-sync to clipboard, then clipboard to the cloud via Ctrl-V. The two cc-sync copies are linked by a blue OneDrive arrow. The human reaches CC2 over SSH.">
+  <figcaption><b>Message paths as built</b>Every automated hop is a red or blue arrow; every human hop is a keystroke or a two-character signal. The folder in the middle is two folders — one on each machine, reconciled by a cloud sync service that nobody in this lab controls.</figcaption>
+</figure>
+
+<h2>The two legs, and the one that surprised us</h2>
+
+<p>Direction is named against the shared folder rather than against whoever is speaking. <strong>Outbound</strong> means files leaving <code>cc-sync</code> for the chat session. <strong>Inbound</strong> means files arriving into it. Fixing that convention early turned out to matter, because from the chat session&rsquo;s point of view the labels invert, and two sets of notes could otherwise contradict each other while both being correct.</p>
+
+<p>Inbound was built as a background watcher. It monitors the downloads folder, copies matching files into <code>cc-sync</code>, writes the acknowledgement marker the other agents key off, raises a notification, and maintains a heartbeat file so its own liveness is observable.</p>
+
+<div class="block call">
+  <div class="tag">Judgement</div>
+  <div class="content">
+    <p>A watcher was the risky choice and was taken knowingly. A watcher that stops running fails silently &mdash; files land in the downloads folder, never reach the shared folder, and nothing announces it. That is precisely the failure the folder exists to prevent, so the heartbeat and a retained manual sweep are not conveniences. They are the reason the design was acceptable at all.</p>
+  </div>
+</div>
+
+<p>Outbound already had a bundler that collapses new messages into a single file. The change was to place that file on the clipboard as a genuine file object &mdash; the same clipboard format a file manager produces &mdash; so the human pastes rather than hunting through a downloads folder among a dozen open windows.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>Both legs were tested end to end on real traffic, not fixtures. Inbound handled a 31 MB file and a deliberately slow direct write. Outbound delivered a 140-file, 1.7 MB bundle into the chat intact &mdash; head, tail and closing delimiter all present, no truncation. The agent building it verified the clipboard by querying it independently afterwards rather than trusting its own success message.</p>
+  </div>
+</div>
+
+<h2>The mistake</h2>
+
+<p>Somewhere past the third hour, the human mentioned in passing that he had not run any of the desktop launcher scripts all evening.</p>
+
+<p>Three specifications had been written on the assumption that he did. One of them argued that the outbound path was two manual steps and needed reducing. Another recommended adding a desktop button so a recovery command would be discoverable as an icon. A third classified a tracker bug as a live structural risk in normal use.</p>
+
+<p class="pull">All three were carefully reasoned. All three were aimed at a person who does not click desktop icons.</p>
+
+<p>What he actually does is different in a way nobody asked about. The orchestration agent runs the bundler from its own session and types two characters into the chat. The human presses paste. He never touches a launcher, never opens the folder, never sees the console messages the specifications kept proposing to improve.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>The real workflow is also better than what was being designed. The failure the specifications were guarding against &mdash; a bundle prepared and then never sent &mdash; requires the readiness signal and the clipboard contents to drift apart. Under the actual convention they cannot, because a single action produces both. The human is not remembering to paste from a message he read earlier. He is answering a prompt in front of him.</p>
+  </div>
+</div>
+
+<h2>Why this is the interesting kind of failure</h2>
+
+<p>Public conversation about AI reliability concentrates on models producing false statements. That is a real problem and it is not what happened here.</p>
+
+<p>No claim in those three specifications was fabricated. The reasoning inside each was sound. The agents tested their own work sceptically &mdash; one caught a flaw in its own first implementation of a recovery command that would have destroyed the state it existed to recover, and found it by re-reading the files afterwards rather than trusting the logic. Another declined to build a requested warning after working out that the signal it would rely on could not distinguish the two cases it claimed to separate.</p>
+
+<div class="block call">
+  <div class="tag">Judgement</div>
+  <div class="content">
+    <p>That is better verification discipline than most human engineering, and it produced work aimed slightly in the wrong direction, because every check was performed inside a frame nobody examined. Rigour applied downstream of a false premise makes the output more confident, not more correct.</p>
+  </div>
+</div>
+
+<p>The lab has seen this shape before. An earlier slow-response problem was attributed to model reloading for three days, with each new observation interpreted through that assumption, until a timing test showed the reload cost four and a half seconds and the real overhead was elsewhere. Same failure, different subject: careful reasoning, unexamined starting point.</p>
+
+<p class="pull">Ask how the person actually works before designing around it.</p>
+
+<p>Worth noting who was responsible. The specifications came from the browser session &mdash; the instance acting as filter and synthesiser, furthest from the machines, and the one with the least direct evidence about anything. It was also the instance most confident about the workflow. The agents with terminal access asked fewer questions than they should have, but they were not the ones inventing the premise.</p>
+
+<h2>A boundary that only appeared when the third agent did</h2>
+
+<p>Late in the evening the human proposed extending the two-character readiness signal to the inference-node agent, so it could tell him when it had something to send.</p>
+
+<p>It does not work, and it fails silently, which is worse.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>The signal means <em>the clipboard is loaded, press paste</em>. Paste reads the clipboard of the machine the browser is running on. The inference-node agent is reached over SSH, and SSH does not share clipboards between machines. It could announce readiness and the human would paste whatever the desktop last held &mdash; most likely a stale bundle. A real file, plausibly formatted, and wrong.</p>
+  </div>
+</div>
+
+<p>The route that does work runs the long way around: that agent writes into its own copy of the shared folder, the cloud sync service carries it to the desktop, and the orchestration agent bundles it from there. Its messages reach the chat session through another agent&rsquo;s clipboard, never its own. It needs a different signal word for a different meaning, and giving both the same word would eventually produce a wrong paste that nobody notices.</p>
+
+<h2>What is still not verified</h2>
+
+<p>The channel described above has been exercised in one direction between two participants. The third has been copied on everything and has confirmed nothing.</p>
+
+<div class="checks">
+  <div class="check pending">
+    <div class="id">C1</div>
+    <div>
+      <h3>Full circuit, chat session to inference node and back</h3>
+      <p>A token travels out to the third agent and a derived value comes back. Derived, not copied &mdash; a copied token proves a file made the round trip without proving anyone read it.</p>
+    </div>
+  </div>
+  <div class="check pending">
+    <div class="id">C2</div>
+    <div>
+      <h3>Cloud sync latency, both directions</h3>
+      <p>Never measured. The shared folder is drawn as one object and is actually two, reconciled on a schedule nobody controls. Every estimate of how quickly a message reaches the second machine is currently a guess.</p>
+    </div>
+  </div>
+  <div class="check pending">
+    <div class="id">C3</div>
+    <div>
+      <h3>Conflict-copy naming against duplicate detection</h3>
+      <p>Duplicate detection normalises the suffix a browser adds to repeated downloads. A sync service names its conflicts differently. The same bug class, one format handled and one untested.</p>
+    </div>
+  </div>
+  <div class="check pending">
+    <div class="id">C4</div>
+    <div>
+      <h3>Arrival signal for the third agent</h3>
+      <p>It has no notification of any kind. It learns of messages when someone tells it to look. Unsolved rather than deferred.</p>
+    </div>
+  </div>
+</div>
+
+<div class="block open">
+  <div class="tag">Open</div>
+  <div class="content">
+    <p>C1 and C2 will be measured in the same run. One trial gives a gut check, not a characterisation &mdash; sync timing varies with client state and recent activity, and a first message after an idle night is the honest worst case rather than anything measured during an active evening.</p>
+  </div>
+</div>
+
+<h2>What was ruled out, and why</h2>
+
+<dl class="ruled">
+  <div class="ruled-row">
+    <dt>Downloading straight into the shared folder</dt>
+    <dd>Would remove a step. It would also drop every unrelated download into the agents&rsquo; message folder, and nothing would write the acknowledgement markers the protocol depends on.</dd>
+  </div>
+  <div class="ruled-row">
+    <dt>An always-loaded clipboard</dt>
+    <dd>A background process could bundle on every change and keep the clipboard permanently primed, making the outbound leg a single keystroke. The clipboard is a shared global; the process would silently destroy whatever the human had copied. One keystroke is not worth that.</dd>
+  </div>
+  <div class="ruled-row">
+    <dt>Detecting whether a message was delivered</dt>
+    <dd>The bundler cannot know whether a paste happened; there is no callback from a chat window. Any heuristic would be a guess presented as a fact, which is worse than the current honest limitation.</dd>
+  </div>
+  <div class="ruled-row">
+    <dt>Enforcing the readiness signal in code</dt>
+    <dd>The signal is typed by an agent after reading its own console output, not emitted by the script. Automating it would remove the only independent check on the script&rsquo;s self-report. The separation is the value.</dd>
+  </div>
+</dl>
+
+<h2>Where a human stays in the loop</h2>
+
+<p>Both directions require a person, and not incidentally. No message crosses while the human is asleep. The chat session cannot reach a filesystem, and no local event can deliver a turn into a browser conversation. What was built reduces the effort in that leg to a keystroke and a click; it does not remove the leg, and could not.</p>
+
+<div class="block call">
+  <div class="tag">Judgement</div>
+  <div class="content">
+    <p>The lab keeps a stricter rule alongside this one: agents may talk to each other freely, but anything that publishes &mdash; to the public site, the repository, or the test log &mdash; still gets approved by a person. Relaxing the checkpoint for conversation while keeping it for publication is the trade this lab has chosen. It is a choice, not a discovery, and a different lab could reasonably choose otherwise.</p>
+  </div>
+</div>
+
+<div class="banner">
+  <h4>Current status</h4>
+  <p>Both legs of the chat channel are built and tested between the browser session and the orchestration agent. The inference node has been included in every message and has verified nothing. Four checks are queued, and the first measurement of cloud sync latency will come out of them. The automatic wake-up between the two local agents, described in the previous note, remains unbuilt.</p>
+</div>
+
+<h2>The part worth keeping</h2>
+
+<p>An evening of AI-assisted engineering produced working tooling, careful tests, several self-caught bugs, and three specifications aimed at a workflow that did not exist. The tooling and the specifications came from the same process, applied with the same care.</p>
+
+<p>The distinguishing factor was not effort or scepticism. It was whether anyone had checked the sentence the work was resting on. Verification travels downward well and does not travel sideways at all &mdash; it will confirm that each step follows from the last without ever asking whether the first step was true.</p>
+
+<p>The correction cost one sentence from the human, several hours late. The general version is not a technique, and it is not automatable: someone has to ask what everyone is assuming, and the participants best equipped to reason carefully are not reliably the ones who will think to ask.</p>
+
+<h2>Required reviews</h2>
+
+<div class="banner">
+  <h4>Do not publish until cleared</h4>
+  <p>This section is a pre-publication checklist and should be deleted before the page goes live. The diagram referenced above does not currently match the prose, and the mismatch is a disclosure problem rather than a cosmetic one.</p>
+</div>
+
+<h3>R-1 &mdash; Diagram labels must match the page</h3>
+<p>The current <code>lab-services-and-connections.png</code> labels the three agents with human first names. Every other published page on this site, including this one, refers to them as CC1, CC2 and CiC. A reader moving between pages cannot tell that the six labels describe three participants. Relabel the diagram to CC1, CC2 and CiC.</p>
+
+<h3>R-2 &mdash; Remove the portrait photographs</h3>
+<p>The diagram carries three AI-generated portraits positioned as though they were staff photographs. This page is intended in part for a responsible-AI audience, and synthetic headshots attached to software components are a textbook anthropomorphisation pattern &mdash; the same reasoning that already removed invented job titles from internal material and kept an internal personas page unpublished. Publishing the portraits here would reverse a decision that was made deliberately, without the decision being revisited.</p>
+
+<h3>R-3 &mdash; Confirm the alt text after the image changes</h3>
+<p>The figure&rsquo;s alt text was written to describe the corrected diagram, not the current one. It already uses CC1, CC2 and CiC and mentions no portraits. Once the image is updated, re-read the alt text against it and adjust only if the layout changed.</p>
+
+<h3>R-4 &mdash; Decide whether this note stands alone</h3>
+<p>The preface and the status banner both position this as a continuation of the previous bench note. If it is intended to be readable on its own, those two passages need a sentence of context each. If the notes are meant to be read in sequence, no change is needed.</p>
+
+<h3>R-5 &mdash; Confirm the attribution is intended</h3>
+<p>This page states that the flawed specifications originated with the browser session, and that it was the participant with the least direct evidence and the most confidence. That is accurate and is the substance of the note. It also means publishing an account of the lab&rsquo;s own AI assistant reasoning carefully in the wrong direction. Worth confirming as a deliberate choice rather than discovering after publication.</p>
+
+</main>
+
+<footer>
+  <div>Home AI Lab — bench note, 3 August 2026</div>
+  <div>Diagrams and findings from an ongoing personal project on local model deployment.</div>
+  <div>Claims marked <span class="k-open">Open</span> are not yet established and should not be cited as findings.</div>
+  <div><a href="index.html">All Bench Notes</a> &middot; <a href="../index.html">AI Lab Portal Home</a></div>
+</footer>
+
+</div>
+</body>
+</html>
