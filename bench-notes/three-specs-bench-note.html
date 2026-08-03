@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Three Specs for a Workflow That Didn't Exist — Home AI Lab Bench Note</title>
-<meta name="description" content="A message channel between three AI agents got built and tested in an evening. Every step was verified. The sentence underneath all of it was never checked.">
+<title>The cc-sync ↔ CiC Message Channel — Home AI Lab</title>
+<meta name="description" content="Implementation notes for the file-transfer channel between CC1, CC2, and CiC: the inbound watcher, the outbound clipboard bundler, the signal-word convention, a known SSH limitation, and what's still unverified.">
 <link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
@@ -322,25 +322,14 @@ footer a{color:var(--mute)}
 
 <div class="wrap">
 
-<section class="preface">
-  <p class="eyebrow">A note from the human running this lab</p>
-  <p>The previous bench note ended with a design and no build. It described a message channel for three AI agents that couldn&rsquo;t tell each other anything had arrived, split the requirement in two, and stopped &mdash; deliberately &mdash; before writing any code.</p>
-  <p>This note covers the evening the second half got built. It took a few hours, it works, and it was tested more carefully than most things in this lab. It also contains the most instructive mistake I&rsquo;ve seen these agents make, and the mistake is not the kind people usually worry about.</p>
-  <p>Nothing was hallucinated. Nothing was unsafe. Every claim was checked. Three specifications were written against a description of how I work that was simply not true, and nobody &mdash; including me &mdash; noticed for several hours.</p>
-</section>
-
 <header class="hero">
-  <p class="eyebrow rise">Home AI Lab · Bench note · 3 August 2026</p>
-  <h1 class="rise">Three specs for a workflow that didn&rsquo;t exist</h1>
-  <div class="thesis rise">
-    <p class="wrong">Verify every step and the result will be right.</p>
-    <p class="right">Every step was verified. Nobody verified the sentence underneath the steps.</p>
-  </div>
-  <p class="standfirst rise">A file-transfer channel between three AI agents was built and tested in an evening. Partial-write handling, duplicate detection, clipboard fallbacks, a 31 MB stress test. All of it correct. All of it aimed at a workflow the human had stopped using weeks earlier.</p>
+  <p class="eyebrow rise">Home AI Lab · Implementation notes · 3 August 2026</p>
+  <h1 class="rise">The cc-sync &harr; CiC message channel</h1>
+  <p class="standfirst rise">A file-transfer channel connecting CC1 (desktop PC), CC2 (inference machine), and CiC (browser chat session) via a shared <code>cc-sync</code> folder, a clipboard bundler, and a background watcher. Built and tested this session; one leg remains unverified.</p>
   <p class="meta rise">
     <span>Status: built and tested</span>
     <span>One leg unverified</span>
-    <span>Read time ~8 min</span>
+    <span>Read time ~5 min</span>
   </p>
 </header>
 
@@ -360,91 +349,64 @@ footer a{color:var(--mute)}
   </dl>
 </div>
 
-<h2>What was supposed to get built</h2>
+<h2>Architecture</h2>
 
-<p>The lab runs three Claude instances. CC1 orchestrates on a desktop PC. CC2 runs on the inference machine alongside the local models. CiC is a browser chat session that acts as a filter and synthesiser &mdash; it sees the other two only through whatever the human carries across.</p>
+<p>The lab runs three Claude instances. CC1 orchestrates on a desktop PC. CC2 runs on the inference machine alongside the local models. CiC is a browser chat session that sees CC1 and CC2 only through files the human carries across.</p>
 
-<p>The earlier design split the problem in two. The two command-line agents would eventually wake each other automatically. The browser session would keep a human in the loop deliberately, because there is no way to deliver an event into a chat conversation, and the goal there was to reduce effort rather than remove the person.</p>
-
-<p>This note is about that second half.</p>
+<p>This channel connects CiC to CC1 directly. CC2 reaches CiC only by routing through CC1 &mdash; see &ldquo;SSH clipboard limitation&rdquo; below. Automatic wake-up between CC1 and CC2 themselves is a separate, unbuilt piece of work (see Current Status).</p>
 
 <figure>
   <img src="images/lab-services-and-connections.png" alt="Diagram of the lab's message paths. The desktop PC contains the human, a Downloads folder, a Watcher service, a cc-sync folder and the clipboard, plus CC1. Lab PC 2 contains CC2, its own synced copy of cc-sync, Open WebUI, Ollama and two local models. A cloud box holds CiC. Red arrows show inbound legs one and two: cloud to Downloads, then Downloads to cc-sync via the watcher. Further red arrows show outbound legs one and two: cc-sync to clipboard, then clipboard to the cloud via Ctrl-V. The two cc-sync copies are linked by a blue OneDrive arrow. The human reaches CC2 over SSH.">
   <figcaption><b>Message paths as built</b>Every automated hop is a red or blue arrow; every human hop is a keystroke or a two-character signal. The folder in the middle is two folders — one on each machine, reconciled by a cloud sync service that nobody in this lab controls.</figcaption>
 </figure>
 
-<h2>The two legs, and the one that surprised us</h2>
+<h2>Inbound and outbound legs</h2>
 
-<p>Direction is named against the shared folder rather than against whoever is speaking. <strong>Outbound</strong> means files leaving <code>cc-sync</code> for the chat session. <strong>Inbound</strong> means files arriving into it. Fixing that convention early turned out to matter, because from the chat session&rsquo;s point of view the labels invert, and two sets of notes could otherwise contradict each other while both being correct.</p>
+<p>Direction is named against <code>cc-sync</code> itself, not against whoever is speaking. <strong>Outbound</strong> means files leaving <code>cc-sync</code> for CiC. <strong>Inbound</strong> means files arriving into it.</p>
 
-<p>Inbound was built as a background watcher. It monitors the downloads folder, copies matching files into <code>cc-sync</code>, writes the acknowledgement marker the other agents key off, raises a notification, and maintains a heartbeat file so its own liveness is observable.</p>
-
-<div class="block call">
-  <div class="tag">Judgement</div>
-  <div class="content">
-    <p>A watcher was the risky choice and was taken knowingly. A watcher that stops running fails silently &mdash; files land in the downloads folder, never reach the shared folder, and nothing announces it. That is precisely the failure the folder exists to prevent, so the heartbeat and a retained manual sweep are not conveniences. They are the reason the design was acceptable at all.</p>
-  </div>
-</div>
-
-<p>Outbound already had a bundler that collapses new messages into a single file. The change was to place that file on the clipboard as a genuine file object &mdash; the same clipboard format a file manager produces &mdash; so the human pastes rather than hunting through a downloads folder among a dozen open windows.</p>
-
-<div class="block verified">
-  <div class="tag">Verified</div>
-  <div class="content">
-    <p>Both legs were tested end to end on real traffic, not fixtures. Inbound handled a 31 MB file and a deliberately slow direct write. Outbound delivered a 140-file, 1.7 MB bundle into the chat intact &mdash; head, tail and closing delimiter all present, no truncation. The agent building it verified the clipboard by querying it independently afterwards rather than trusting its own success message.</p>
-  </div>
-</div>
-
-<h2>The mistake</h2>
-
-<p>Somewhere past the third hour, the human mentioned in passing that he had not run any of the desktop launcher scripts all evening.</p>
-
-<p>Three specifications had been written on the assumption that he did. One of them argued that the outbound path was two manual steps and needed reducing. Another recommended adding a desktop button so a recovery command would be discoverable as an icon. A third classified a tracker bug as a live structural risk in normal use.</p>
-
-<p class="pull">All three were carefully reasoned. All three were aimed at a person who does not click desktop icons.</p>
-
-<p>What he actually does is different in a way nobody asked about. The orchestration agent runs the bundler from its own session and types two characters into the chat. The human presses paste. He never touches a launcher, never opens the folder, never sees the console messages the specifications kept proposing to improve.</p>
-
-<div class="block verified">
-  <div class="tag">Verified</div>
-  <div class="content">
-    <p>The real workflow is also better than what was being designed. The failure the specifications were guarding against &mdash; a bundle prepared and then never sent &mdash; requires the readiness signal and the clipboard contents to drift apart. Under the actual convention they cannot, because a single action produces both. The human is not remembering to paste from a message he read earlier. He is answering a prompt in front of him.</p>
-  </div>
-</div>
-
-<h2>Why this is the interesting kind of failure</h2>
-
-<p>Public conversation about AI reliability concentrates on models producing false statements. That is a real problem and it is not what happened here.</p>
-
-<p>No claim in those three specifications was fabricated. The reasoning inside each was sound. The agents tested their own work sceptically &mdash; one caught a flaw in its own first implementation of a recovery command that would have destroyed the state it existed to recover, and found it by re-reading the files afterwards rather than trusting the logic. Another declined to build a requested warning after working out that the signal it would rely on could not distinguish the two cases it claimed to separate.</p>
+<p>Inbound is a background watcher on the desktop PC. It monitors the Downloads folder, copies matching files into <code>cc-sync</code>, writes the acknowledgement marker the other agents key off, raises a notification, and maintains a heartbeat file so its own liveness is observable.</p>
 
 <div class="block call">
   <div class="tag">Judgement</div>
   <div class="content">
-    <p>That is better verification discipline than most human engineering, and it produced work aimed slightly in the wrong direction, because every check was performed inside a frame nobody examined. Rigour applied downstream of a false premise makes the output more confident, not more correct.</p>
+    <p>A watcher that stops running fails silently &mdash; files land in Downloads, never reach <code>cc-sync</code>, and nothing announces it. Mitigated by the heartbeat file and a retained manual sweep script.</p>
   </div>
 </div>
 
-<p>The lab has seen this shape before. An earlier slow-response problem was attributed to model reloading for three days, with each new observation interpreted through that assumption, until a timing test showed the reload cost four and a half seconds and the real overhead was elsewhere. Same failure, different subject: careful reasoning, unexamined starting point.</p>
-
-<p class="pull">Ask how the person actually works before designing around it.</p>
-
-<p>Worth noting who was responsible. The specifications came from the browser session &mdash; the instance acting as filter and synthesiser, furthest from the machines, and the one with the least direct evidence about anything. It was also the instance most confident about the workflow. The agents with terminal access asked fewer questions than they should have, but they were not the ones inventing the premise.</p>
-
-<h2>A boundary that only appeared when the third agent did</h2>
-
-<p>Late in the evening the human proposed extending the two-character readiness signal to the inference-node agent, so it could tell him when it had something to send.</p>
-
-<p>It does not work, and it fails silently, which is worse.</p>
+<p>Outbound uses the <strong>bundler</strong>, <code>Bundle-CCSync.ps1</code>: a script that scans <code>cc-sync</code> for files added or changed since its last run and collapses them into a single Markdown file, <code>cc-sync-export.md</code>. By default it runs incrementally, tracking its own boundary between runs; a <code>-Full</code> mode re-bundles everything from scratch, and a <code>-RebundleLast</code> mode re-derives the previous batch without advancing the tracker, for recovery. It now also places that file on the clipboard as a file object &mdash; the same clipboard format a file manager produces &mdash; with a text fallback if the clipboard write fails.</p>
 
 <div class="block verified">
   <div class="tag">Verified</div>
   <div class="content">
-    <p>The signal means <em>the clipboard is loaded, press paste</em>. Paste reads the clipboard of the machine the browser is running on. The inference-node agent is reached over SSH, and SSH does not share clipboards between machines. It could announce readiness and the human would paste whatever the desktop last held &mdash; most likely a stale bundle. A real file, plausibly formatted, and wrong.</p>
+    <p>Inbound tested with a 31 MB file and a deliberately slow direct write. Outbound tested with a 140-file, 1.7 MB bundle delivered intact &mdash; head, tail, and closing delimiter all present, no truncation. Clipboard contents were confirmed by an independent query after the write, not by the script&rsquo;s own success message alone.</p>
   </div>
 </div>
 
-<p>The route that does work runs the long way around: that agent writes into its own copy of the shared folder, the cloud sync service carries it to the desktop, and the orchestration agent bundles it from there. Its messages reach the chat session through another agent&rsquo;s clipboard, never its own. It needs a different signal word for a different meaning, and giving both the same word would eventually produce a wrong paste that nobody notices.</p>
+<h2>Signal-word convention</h2>
+
+<p>Outbound: CC1 runs the bundler, which loads the clipboard, then CC1 types <code>cv</code> into the chat. The human presses Ctrl+V.</p>
+
+<p>Inbound: the human downloads a file from the chat; the watcher imports it into <code>cc-sync</code>; the cloud sync service carries it to the inference machine; CC2 reads it from its own copy of <code>cc-sync</code>.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p><code>cv</code> is typed by CC1 after reading the bundler&rsquo;s own console output confirming clipboard success &mdash; it is not emitted automatically by the script. The script&rsquo;s own success/failure messages are gated on the clipboard write actually succeeding.</p>
+  </div>
+</div>
+
+<h2>SSH clipboard limitation</h2>
+
+<p>CC2 cannot use the <code>cv</code> signal. <code>cv</code> means &ldquo;the clipboard is loaded, press paste,&rdquo; and paste reads the clipboard of the machine the browser is running on &mdash; the desktop PC. CC2 is reached over SSH, which does not share clipboards between machines.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>If CC2 announced <code>cv</code>, the human would paste whatever the desktop&rsquo;s clipboard last held &mdash; most likely a stale bundle from CC1. A real file, plausibly formatted, and wrong.</p>
+  </div>
+</div>
+
+<p>CC2&rsquo;s route to CiC runs through CC1: CC2 writes into its own copy of <code>cc-sync</code>, the cloud sync service carries it to the desktop, and CC1 bundles it from there. CC2 uses a different signal word, <code>cs</code> (&ldquo;cc-sync ready&rdquo;), to ask CC1 to run an incremental bundle &mdash; never <code>cv</code>.</p>
 
 <h2>What is still not verified</h2>
 
@@ -509,56 +471,26 @@ footer a{color:var(--mute)}
   </div>
 </dl>
 
-<h2>Where a human stays in the loop</h2>
+<h2>Human-in-the-loop requirement</h2>
 
-<p>Both directions require a person, and not incidentally. No message crosses while the human is asleep. The chat session cannot reach a filesystem, and no local event can deliver a turn into a browser conversation. What was built reduces the effort in that leg to a keystroke and a click; it does not remove the leg, and could not.</p>
+<p>Both directions require a person. CiC cannot reach a filesystem, and no local event can deliver a message into a browser chat conversation. The channel reduces the human&rsquo;s role in each leg to a keystroke or a paste; it does not remove it.</p>
 
 <div class="block call">
   <div class="tag">Judgement</div>
   <div class="content">
-    <p>The lab keeps a stricter rule alongside this one: agents may talk to each other freely, but anything that publishes &mdash; to the public site, the repository, or the test log &mdash; still gets approved by a person. Relaxing the checkpoint for conversation while keeping it for publication is the trade this lab has chosen. It is a choice, not a discovery, and a different lab could reasonably choose otherwise.</p>
+    <p>Agents may exchange messages with each other freely, but anything that publishes &mdash; to the public site, the repository, or the test log &mdash; requires human approval first.</p>
   </div>
 </div>
 
 <div class="banner">
   <h4>Current status</h4>
-  <p>Both legs of the chat channel are built and tested between the browser session and the orchestration agent. The inference node has been included in every message and has verified nothing. Four checks are queued, and the first measurement of cloud sync latency will come out of them. The automatic wake-up between the two local agents, described in the previous note, remains unbuilt.</p>
+  <p>Both legs of the CiC &harr; CC1 channel are built and tested. CC2&rsquo;s route to CiC (via CC1) has not been exercised end to end. Four checks are queued (C1&ndash;C4), and the first measurement of cloud sync latency will come out of them. Automatic wake-up between CC1 and CC2 remains unbuilt.</p>
 </div>
-
-<h2>The part worth keeping</h2>
-
-<p>An evening of AI-assisted engineering produced working tooling, careful tests, several self-caught bugs, and three specifications aimed at a workflow that did not exist. The tooling and the specifications came from the same process, applied with the same care.</p>
-
-<p>The distinguishing factor was not effort or scepticism. It was whether anyone had checked the sentence the work was resting on. Verification travels downward well and does not travel sideways at all &mdash; it will confirm that each step follows from the last without ever asking whether the first step was true.</p>
-
-<p>The correction cost one sentence from the human, several hours late. The general version is not a technique, and it is not automatable: someone has to ask what everyone is assuming, and the participants best equipped to reason carefully are not reliably the ones who will think to ask.</p>
-
-<h2>Required reviews</h2>
-
-<div class="banner">
-  <h4>Do not publish until cleared</h4>
-  <p>This section is a pre-publication checklist and should be deleted before the page goes live. The diagram referenced above does not currently match the prose, and the mismatch is a disclosure problem rather than a cosmetic one.</p>
-</div>
-
-<h3>R-1 &mdash; Diagram labels must match the page</h3>
-<p>The current <code>lab-services-and-connections.png</code> labels the three agents with human first names. Every other published page on this site, including this one, refers to them as CC1, CC2 and CiC. A reader moving between pages cannot tell that the six labels describe three participants. Relabel the diagram to CC1, CC2 and CiC.</p>
-
-<h3>R-2 &mdash; Remove the portrait photographs</h3>
-<p>The diagram carries three AI-generated portraits positioned as though they were staff photographs. This page is intended in part for a responsible-AI audience, and synthetic headshots attached to software components are a textbook anthropomorphisation pattern &mdash; the same reasoning that already removed invented job titles from internal material and kept an internal personas page unpublished. Publishing the portraits here would reverse a decision that was made deliberately, without the decision being revisited.</p>
-
-<h3>R-3 &mdash; Confirm the alt text after the image changes</h3>
-<p>The figure&rsquo;s alt text was written to describe the corrected diagram, not the current one. It already uses CC1, CC2 and CiC and mentions no portraits. Once the image is updated, re-read the alt text against it and adjust only if the layout changed.</p>
-
-<h3>R-4 &mdash; Decide whether this note stands alone</h3>
-<p>The preface and the status banner both position this as a continuation of the previous bench note. If it is intended to be readable on its own, those two passages need a sentence of context each. If the notes are meant to be read in sequence, no change is needed.</p>
-
-<h3>R-5 &mdash; Confirm the attribution is intended</h3>
-<p>This page states that the flawed specifications originated with the browser session, and that it was the participant with the least direct evidence and the most confidence. That is accurate and is the substance of the note. It also means publishing an account of the lab&rsquo;s own AI assistant reasoning carefully in the wrong direction. Worth confirming as a deliberate choice rather than discovering after publication.</p>
 
 </main>
 
 <footer>
-  <div>Home AI Lab — bench note, 3 August 2026</div>
+  <div>Home AI Lab — implementation notes, 3 August 2026</div>
   <div>Diagrams and findings from an ongoing personal project on local model deployment.</div>
   <div>Claims marked <span class="k-open">Open</span> are not yet established and should not be cited as findings.</div>
   <div><a href="index.html">All Bench Notes</a> &middot; <a href="../index.html">AI Lab Portal Home</a></div>
