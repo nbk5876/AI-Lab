@@ -383,7 +383,7 @@ footer a{color:var(--mute)}
   </dl>
 </div>
 
-<h2>What was supposed to get built</h2>
+<h2 id="what-was-supposed-to-get-built">What was supposed to get built</h2>
 
 <p>The lab runs three Claude instances. CC1 orchestrates on a desktop PC. CC2 runs on the inference machine alongside the local models. CiC is a browser chat session that acts as a filter and synthesiser &mdash; it sees the other two only through whatever the human carries across.</p>
 
@@ -396,7 +396,7 @@ footer a{color:var(--mute)}
   <figcaption><b>Message paths as built</b>Every automated hop is a red or blue arrow; every human hop is a keystroke or a two-character signal. The folder in the middle is two folders — one on each machine, reconciled by a cloud sync service that nobody in this lab controls. The diagram uses the lab&rsquo;s internal working names: Jeff is CC1, Debbie is CC2, Jason is CiC. Those three are illustrative personas for software components, not people; the prose below uses the component names throughout.</figcaption>
 </figure>
 
-<h2>The two legs, and the one that surprised us</h2>
+<h2 id="the-two-legs-and-the-one-that-surprised-us">The two legs, and the one that surprised us</h2>
 
 <p>Direction is named against the shared folder rather than against whoever is speaking. <strong>Outbound</strong> means files leaving <code>cc-sync</code> for the chat session. <strong>Inbound</strong> means files arriving into it. Fixing that convention early turned out to matter, because from the chat session&rsquo;s point of view the labels invert, and two sets of notes could otherwise contradict each other while both being correct.</p>
 
@@ -418,7 +418,7 @@ footer a{color:var(--mute)}
   </div>
 </div>
 
-<h2>The mistake</h2>
+<h2 id="the-mistake">The mistake</h2>
 
 <p>Somewhere past the third hour, the human mentioned in passing that he had not run any of the desktop launcher scripts all evening.</p>
 
@@ -435,7 +435,7 @@ footer a{color:var(--mute)}
   </div>
 </div>
 
-<h2>Why this is the interesting kind of failure</h2>
+<h2 id="why-this-is-the-interesting-kind-of-failure">Why this is the interesting kind of failure</h2>
 
 <p>Public conversation about AI reliability concentrates on models producing false statements. That is a real problem and it is not what happened here.</p>
 
@@ -454,7 +454,7 @@ footer a{color:var(--mute)}
 
 <p>Worth noting who was responsible. The specifications came from the browser session &mdash; the instance acting as filter and synthesiser, furthest from the machines, and the one with the least direct evidence about anything. It was also the instance most confident about the workflow. The agents with terminal access asked fewer questions than they should have, but they were not the ones inventing the premise.</p>
 
-<h2>A boundary that only appeared when the third agent did</h2>
+<h2 id="a-boundary-that-only-appeared-when-the-third-agent-did">A boundary that only appeared when the third agent did</h2>
 
 <p>Late in the evening the human proposed extending the two-character readiness signal to the inference-node agent, so it could tell him when it had something to send.</p>
 
@@ -469,7 +469,7 @@ footer a{color:var(--mute)}
 
 <p>The route that does work runs the long way around: that agent writes into its own copy of the shared folder, the cloud sync service carries it to the desktop, and the orchestration agent bundles it from there. Its messages reach the chat session through another agent&rsquo;s clipboard, never its own. It needs a different signal word for a different meaning, and giving both the same word would eventually produce a wrong paste that nobody notices.</p>
 
-<h2>What is still not verified</h2>
+<h2 id="what-is-still-not-verified">What is still not verified</h2>
 
 <p>The channel described above has been exercised in one direction between two participants. The third has been copied on everything and has confirmed nothing.</p>
 
@@ -511,7 +511,7 @@ footer a{color:var(--mute)}
   </div>
 </div>
 
-<h2>What was ruled out, and why</h2>
+<h2 id="what-was-ruled-out-and-why">What was ruled out, and why</h2>
 
 <dl class="ruled">
   <div class="ruled-row">
@@ -532,7 +532,7 @@ footer a{color:var(--mute)}
   </div>
 </dl>
 
-<h2>Where a human stays in the loop</h2>
+<h2 id="where-a-human-stays-in-the-loop">Where a human stays in the loop</h2>
 
 <p>Both directions require a person, and not incidentally. No message crosses while the human is asleep. The chat session cannot reach a filesystem, and no local event can deliver a turn into a browser conversation. What was built reduces the effort in that leg to a keystroke and a click; it does not remove the leg, and could not.</p>
 
@@ -548,7 +548,7 @@ footer a{color:var(--mute)}
   <p>Both legs of the chat channel are built and tested between the browser session and the orchestration agent. The inference node has been included in every message and has verified nothing. Four checks are queued, and the first measurement of cloud sync latency will come out of them. The automatic wake-up between the two local agents, described in the previous note, remains unbuilt.</p>
 </div>
 
-<h2>The part worth keeping</h2>
+<h2 id="the-part-worth-keeping">The part worth keeping</h2>
 
 <p>An evening of AI-assisted engineering produced working tooling, careful tests, several self-caught bugs, and three specifications aimed at a workflow that did not exist. The tooling and the specifications came from the same process, applied with the same care.</p>
 
@@ -556,7 +556,7 @@ footer a{color:var(--mute)}
 
 <p>The correction cost one sentence from the human, several hours late. The general version is not a technique, and it is not automatable: someone has to ask what everyone is assuming, and the participants best equipped to reason carefully are not reliably the ones who will think to ask.</p>
 
-<h2>Required reviews</h2>
+<h2 id="required-reviews">Required reviews</h2>
 
 <div class="banner">
   <h4>Internal checklist &mdash; delete before any wider circulation</h4>
