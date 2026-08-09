@@ -61,6 +61,12 @@
 
   <h2>Gemma 3:12b — the lab's first vision model</h2>
   <p>Added August 8, 2026 to Lab PC 2 (Node A), <code>gemma3:12b</code> is the lab's first vision-capable model — it can read an uploaded image, not just text. On a real photograph it was accurate and specific, correctly describing detail down to a chair leg at the edge of the frame. It's set to public so other lab members can select it too.</p>
+  <figure class="img-60">
+    <a href="../images/image-flow-diagram.png" target="_blank" rel="noopener">
+      <img src="../images/image-flow-diagram.png" alt="Diagram showing an uploaded photo entering Open WebUI, passing through Ollama, and routing specifically to Gemma — the only one of the three models on Lab PC 2 that can process images.">
+    </a>
+    <figcaption>An uploaded image routes through Ollama to Gemma specifically — the other two models on this node can't process it</figcaption>
+  </figure>
   <div class="lessons">
     <h3>Lesson learned</h3>
     New models inherit Open WebUI's full Builtin Tools defaults, which can be wrong for a model that doesn't support them. Gemma 3 has no tool-calling support, so its first image upload failed with a "does not support tools" error — that presented as a vision failure but wasn't one. Fixed by disabling the tool-related capabilities and keeping Vision, File Upload, and File Context enabled.
