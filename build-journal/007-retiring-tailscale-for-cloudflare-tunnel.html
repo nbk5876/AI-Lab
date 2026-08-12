@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Journal #007 — Retiring Tailscale for Cloudflare Tunnel — AI Lab Portal</title>
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Build Journal #007 — Retiring Tailscale for Cloudflare Tunnel</h1>
+  <div class="subtitle">August 8–10, 2026</div>
+</header>
+
+<nav class="site-nav"><ul>
+  <li><a href="../index.html">Home</a></li>
+  <li><a href="../start-here.html">Start Here</a></li>
+  <li><a href="../architecture/index.html">Architecture</a></li>
+  <li><a href="index.html">Build Journal</a></li>
+  <li><a href="../field-guide/index.html">Local LLM Field Guide</a></li>
+  <li><a href="../engineering-notebook/index.html">Engineering Notebook</a></li>
+  <li><a href="../bench-notes/index.html">Bench Notes</a></li>
+  <li><a href="../hardware/index.html">Hardware</a></li>
+  <li><a href="../models/index.html">Models</a></li>
+  <li><a href="../join/index.html">Join the AI Lab</a></li>
+</ul></nav>
+
+<div class="container">
+
+  <p><a href="index.html">← Back to Build Journal</a></p>
+
+  <p><a href="003-mobile-access-take-two-tailscale.html">Build Journal #003</a> put Tailscale in place as the lab's remote-access layer — a private mesh network, reachable only to devices joined to the same tailnet. This entry covers the lab's move away from that approach, toward a real public domain fronted by a Cloudflare Tunnel.</p>
+
+  <h2>Why Change Anything</h2>
+  <p>Tailscale worked, but it meant every device that wanted in — a phone, a laptop, a guest — had to install the Tailscale client and join the tailnet first. A Cloudflare Tunnel trades that for a real domain name anyone can type into a browser, no client install required, at the cost of exposing an actual public hostname instead of a private mesh address.</p>
+
+  <h2>What Was Set Up</h2>
+  <p>The domain <code>skyapt.org</code> was registered and its nameservers pointed at Cloudflare. A tunnel was provisioned on Lab PC 2 to expose the local Open WebUI instance (<code>localhost:8080</code>) at <code>https://lab.skyapt.org</code> — routing traffic in from the public internet to a machine that was never given a public IP of its own.</p>
+  <p>This phase was deliberately scoped to the tunnel only. Cloudflare Access — the identity/login gate meant to sit in front of the URL — was left for a separate, later task on purpose, so that if something broke, it would be clear which layer broke it.</p>
+
+  <div class="status-banner status-pending">Tailscale itself was not touched or removed as part of this work. This is a parallel path being stood up, not a completed teardown — the name of this entry describes the intent, not yet a finished migration.</div>
+
+  <h2>What's Confirmed</h2>
+  <p><code>https://lab.skyapt.org</code> resolves and loads. A quick-launch button ("CloudF") was added to the lab's menu page pointing at it, alongside the existing Tailscale-based "Gwen" link.</p>
+
+  <h2>What's Still Open</h2>
+  <p>The setup task called for a full report back — exact <code>cloudflared</code> version, tunnel UUID, the config file as written, a same-machine load test, an off-network test from a phone on cellular data with Wi-Fi off, and a reboot test to confirm the tunnel survives unattended. That report hasn't landed yet, so several of those steps are unverified as written up here.</p>
+  <div class="status-banner status-pending">Cloudflare Access is not yet configured. As of this writing, lab.skyapt.org is publicly reachable, fronted only by Open WebUI's own login page — a known, flagged gap, not an oversight. Closing it is the next piece of this work.</div>
+
+  <h2>What's Next</h2>
+  <p>Configure Cloudflare Access in front of the tunnel, get the full verification report on record, and decide when — or whether — Tailscale gets formally retired rather than just set aside.</p>
+
+</div>
+
+<footer class="site-footer">AI Lab Portal · core3.com/AI-Lab/</footer>
+
+</body>
+</html>
