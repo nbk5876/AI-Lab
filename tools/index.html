@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Software — AI Lab Portal</title>
+<title>Lab Tools — AI Lab Portal</title>
 <link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
@@ -14,8 +14,8 @@
 <body>
 
 <header class="page-header">
-  <h1>Software</h1>
-  <div class="subtitle">The tools running the lab</div>
+  <h1>Lab Tools</h1>
+  <div class="subtitle">Small scripts and utilities built to run the lab, catalogued here as they're written</div>
 </header>
 
 <nav class="site-nav"><ul>
@@ -34,26 +34,19 @@
 
 <div class="container">
 
-  <div class="grid">
-    <div class="card">
-      <h2>Ollama</h2>
-      <p>Model manager and local server. Downloads, stores, and runs LLMs, and exposes a local API for front ends to talk to.</p>
-    </div>
-    <div class="card">
-      <h2>Open WebUI</h2>
-      <p>Browser-based chat front end. Auto-detects models running in Ollama and gives them a familiar chat interface.</p>
-    </div>
-    <div class="card">
-      <h2>Claude Code</h2>
-      <p>The engineering assistant building and documenting the lab itself — installing software, writing this site, keeping the journal.</p>
-    </div>
-    <div class="card">
-      <h2>Tailscale</h2>
-      <p>Private mesh VPN connecting the lab's nodes securely, without exposing anything to the public internet.</p>
-    </div>
+  <p>Alongside the models and the write-ups, we've picked up a small collection of one-off scripts for checking on the lab — reading a log, confirming a service is healthy, that kind of thing. This page is a running catalog: what each tool does, where it lives, and how to run it. Nothing here is a product, just utility scripts written as we needed them.</p>
+
+  <h2>Reports</h2>
+
+  <div class="card" style="border-left-color: var(--blue-mid);">
+    <h2>List-WebUI-Users.bat</h2>
+    <p>Prints every registered Open WebUI account — name, email, role, account-created date, and last-active timestamp — read directly (and read-only) from the lab's Open WebUI database.</p>
+    <p><strong>Runs on:</strong> Lab PC 2 (Node A), console or over SSH.</p>
+    <p><strong>Usage:</strong> double-click the <code>.bat</code> at the console, or run the underlying <code>list_webui_users.py</code> with Python directly.</p>
+    <p class="card-link" style="cursor: default;">Open WebUI has no dedicated login-event log — <code>last_active</code> reflects general account activity, not a specific sign-in time.</p>
   </div>
 
-  <p>See the <a href="../engineering-notebook/index.html">Engineering Notebook</a> for install-time observations on each of these, and <a href="../architecture/index.html">Architecture</a> for how they fit together across both nodes.</p>
+  <p style="color: var(--muted); font-size: 0.9rem;">More tools get added here as they're built — nothing else cataloged yet.</p>
 
 </div>
 
