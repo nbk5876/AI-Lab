@@ -266,13 +266,13 @@ footer a{color:var(--mute)}
 <div class="wrap">
 
 <header class="hero">
-  <p class="eyebrow rise">Home AI Lab &middot; Implementation notes &middot; 24 August 2026</p>
+  <p class="eyebrow rise">Home AI Lab &middot; Implementation notes &middot; 24 August 2026 &middot; updated 26 August 2026</p>
   <h1 class="rise">Getting RDP through Cloudflare</h1>
-  <p class="standfirst rise">The inference machine needed graphical Windows access for debugging work, without forwarding a port on a network the lab doesn't control. This note documents the Cloudflare Tunnel and Windows changes made to carry RDP alongside the existing SSH and Open WebUI traffic, the Browser RDP application built on top of it, and the point where a working session still hasn't been produced.</p>
+  <p class="standfirst rise">The inference machine needed graphical Windows access for debugging work, without forwarding a port on a network the lab doesn't control. This note documents the Cloudflare Tunnel and Windows changes made to carry RDP alongside the existing SSH and Open WebUI traffic, the Browser RDP application built on top of it, and the point where a working session still hadn't been produced &mdash; plus a 26 August update covering the different route that actually worked.</p>
   <p class="meta rise">
-    <span>Status: in progress</span>
-    <span>Browser RDP not yet working</span>
-    <span>Read time ~4 min</span>
+    <span>Status: working (see update)</span>
+    <span>Browser RDP path still unresolved</span>
+    <span>Read time ~6 min</span>
   </p>
 </header>
 
@@ -288,6 +288,11 @@ footer a{color:var(--mute)}
     <dt class="k-call">Judgement</dt>
     <dd>A choice made deliberately, where a different setup could reasonably choose otherwise.</dd>
   </dl>
+</div>
+
+<div class="banner" style="background:var(--teal-bg);border-color:#bcd8da">
+  <h4 style="color:var(--teal)">Updated 26 August 2026</h4>
+  <p style="color:var(--ink)">RDP through Cloudflare is now working &mdash; through a different path than the one this note originally left unresolved. The material below is kept as-written, as the historical troubleshooting record. See <a href="#update-26-aug">the update</a> at the end of this page for what actually worked.</p>
 </div>
 
 <h2>Goal</h2>
@@ -364,15 +369,53 @@ footer a{color:var(--mute)}
 </ul>
 
 <div class="banner">
-  <h4>Current status</h4>
+  <h4>Current status &mdash; as of 24 August</h4>
   <p>A backup of the pre-change tunnel config exists, so any of today's additions can be rolled back cleanly. Nothing here should be read as final architecture.</p>
   <p>Next step is a review against Cloudflare's current Browser RDP documentation, to decide whether the public-hostname route is sufficient on its own or whether the private-network/CIDR pieces are actually required &mdash; before making further changes.</p>
 </div>
 
+<h2 id="update-26-aug">Update, 26 August: a working path, a different one</h2>
+
+<p>The Browser RDP/App Launcher path above was never resolved. A separate approach, tried two days later, works: instead of rendering RDP inside a browser tab, Cloudflare's own command-line client opens a local TCP bridge, and the normal Windows Remote Desktop client connects to that bridge rather than to the public hostname directly.</p>
+
+<pre class="code-block"><code>Client PC -&gt; cloudflared access rdp (local bridge) -&gt; rdp.skyapt.org -&gt; Cloudflare Tunnel -&gt; localhost:3389 on ai-lab-b</code></pre>
+
+<p><code>cloudflared access rdp</code> runs on the connecting machine and listens on local port 3389 by default. Windows Remote Desktop (<code>mstsc</code>) is pointed at that local listener, not at <code>rdp.skyapt.org</code> itself. Cloudflare Access authentication is presented when required; once past it, the ordinary Windows RDP login completes against the inference machine exactly as it would on a local network.</p>
+
+<figure>
+  <img src="images/rdp-thru-cloudflare-working.png" alt="Diagram of the working RDP path. A client PC box contains the Windows Remote Desktop client (mstsc), which connects to a local cloudflared access rdp process acting as a TCP bridge listening on local port 3389. That bridge carries TCP 3389 across the internet through an encrypted Cloudflare Tunnel to a Cloudflare Zero Trust RDP application at rdp.skyapt.org, which reaches the RDP service listening on localhost:3389 on the ai-lab-b Windows box. A numbered legend below repeats the four hops: 1 mstsc on the client PC, 2 cloudflared access rdp as the local bridge, 3 rdp.skyapt.org via Cloudflare Access, 4 localhost:3389 on ai-lab-b.">
+  <figcaption><b>Working architecture, 26 August 2026</b>The same public hostname and tunnel from the original setup, reached through a local client-side bridge instead of a browser tab &mdash; a different Cloudflare mechanism than the Browser RDP/App Launcher path this note originally attempted.</figcaption>
+</figure>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>Windows RDP confirmed still enabled on the inference machine (<code>fDenyTSConnections</code> still <code>0</code>). The Cloudflare bridge starts successfully; Windows Remote Desktop connects through it; the remote desktop was reached end to end. The bridge shuts down cleanly when the Remote Desktop session closes.</p>
+  </div>
+</div>
+
+<p>A small launcher script is being built around this sequence: start the bridge, open Remote Desktop full-screen with the account name pre-filled, prompt for the password, surface Cloudflare authentication if it's needed, then tear the bridge down again when the session ends. A manual run of the sequence reached the remote desktop successfully; the launcher itself is still a work in progress.</p>
+
+<div class="block call">
+  <div class="tag">Judgement</div>
+  <div class="content">
+    <p>The Browser RDP/App Launcher investigation above is being left exactly as it was written, as the historical troubleshooting record, rather than rewritten around this outcome. The two paths are genuinely different Cloudflare mechanisms &mdash; finding one working doesn't explain why the other didn't, and that question is still open if browser-only access is ever needed later.</p>
+  </div>
+</div>
+
+<h3>Current state, updated</h3>
+
+<ul class="status">
+  <li>RDP through Cloudflare: <strong>working</strong>, via the local bridge + native Remote Desktop client</li>
+  <li>Windows RDP: still enabled, unchanged since 24 August</li>
+  <li>A connection launcher script: prototyped, reached the remote desktop in a manual run, not yet finished</li>
+  <li class="pending">Browser RDP / App Launcher: still not established, and no longer required for the immediate access goal</li>
+</ul>
+
 </main>
 
 <footer>
-  <div>Home AI Lab &mdash; implementation notes, 24 August 2026</div>
+  <div>Home AI Lab &mdash; implementation notes, 24 August 2026, updated 26 August 2026</div>
   <div>Diagrams and findings from an ongoing personal project on local model deployment.</div>
   <div>Claims marked <span class="k-open">Open</span> are not yet established and should not be cited as findings.</div>
   <div><a href="index.html">All Bench Notes</a> &middot; <a href="../index.html">AI Lab Portal Home</a></div>
