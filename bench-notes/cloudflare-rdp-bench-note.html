@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting RDP Through Cloudflare — Home AI Lab</title>
+<meta name="description" content="Routing Remote Desktop access to the inference machine through the lab's existing Cloudflare Tunnel instead of forwarding a port on a network the lab doesn't control — the changes made, the Browser RDP application built on top of them, and where the setup stalled before a session actually worked.">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#eef1f4;
+  --surface:#ffffff;
+  --ink:#0c1620;
+  --slate:#41576b;
+  --mute:#6d8296;
+  --rule:#d3dbe2;
+  --teal:#1b6e7a;
+  --amber:#9a6410;
+  --amber-bg:#faf2e2;
+  --teal-bg:#e6f0f1;
+
+  --display:"Zilla Slab",Georgia,serif;
+  --body:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.68;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+
+/* ---------- hero ---------- */
+.hero{padding:72px 0 40px;border-bottom:1px solid var(--rule)}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--mute);
+  margin:0 0 34px;
+}
+.hero h1{
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(34px,6vw,54px);
+  line-height:1.08;
+  letter-spacing:-.015em;
+  margin:0 0 34px;
+}
+.standfirst{
+  font-size:18px;
+  color:var(--slate);
+  max-width:60ch;
+  margin:0 0 34px;
+}
+.meta{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--mute);
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 22px;
+  margin:0;
+}
+
+/* ---------- reveal ---------- */
+.rise{opacity:0;transform:translateY(10px);animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards}
+.rise:nth-child(1){animation-delay:.05s}
+.rise:nth-child(2){animation-delay:.16s}
+.rise:nth-child(3){animation-delay:.27s}
+.rise:nth-child(4){animation-delay:.38s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .rise{animation:none;opacity:1;transform:none}
+}
+
+/* ---------- structure ---------- */
+main{padding:8px 0 20px}
+
+h2{
+  font-family:var(--display);
+  font-weight:600;
+  font-size:26px;
+  line-height:1.24;
+  letter-spacing:-.008em;
+  margin:56px 0 4px;
+}
+h3{
+  font-family:var(--body);
+  font-weight:600;
+  font-size:16px;
+  margin:30px 0 2px;
+}
+p{margin:0 0 18px;max-width:68ch}
+a{color:var(--teal);text-decoration-thickness:1px;text-underline-offset:2px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+strong{font-weight:600}
+code{
+  font-family:var(--mono);
+  font-size:.87em;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:1px 5px;
+}
+
+/* ---------- code block ---------- */
+pre.code-block{
+  font-family:var(--mono);
+  font-size:13.5px;
+  line-height:1.6;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:16px 18px;
+  margin:0 0 22px;
+  overflow-x:auto;
+  color:var(--ink);
+}
+pre.code-block code{background:none;border:none;padding:0;font-size:1em}
+
+/* ---------- status margin (signature) ---------- */
+.block{
+  display:grid;
+  grid-template-columns:104px 1fr;
+  gap:0 34px;
+  margin:0 0 6px;
+}
+.block > .tag{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding-top:7px;
+  color:var(--mute);
+  border-top:2px solid var(--rule);
+  align-self:start;
+  margin-top:6px;
+}
+.block > .content > *:first-child{margin-top:0}
+.block.verified > .tag{color:var(--teal);border-top-color:var(--teal)}
+.block.open > .tag{color:var(--amber);border-top-color:var(--amber)}
+.block.call > .tag{color:var(--ink);border-top-color:var(--ink)}
+
+/* ---------- key ---------- */
+.key{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:20px 24px;
+  margin:36px 0 8px;
+}
+.key h4{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--mute);
+  margin:0 0 14px;
+  font-weight:500;
+}
+.key dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 20px;align-items:baseline}
+.key dt{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.key dd{margin:0;font-size:15px;color:var(--slate)}
+.k-verified{color:var(--teal)}
+.k-open{color:var(--amber)}
+.k-call{color:var(--ink)}
+
+/* ---------- lists ---------- */
+ul.plain{margin:0 0 18px;padding-left:20px;max-width:68ch}
+ul.plain li{margin-bottom:9px}
+ul.plain li::marker{color:var(--mute)}
+ul.status{margin:0 0 18px;padding-left:0;list-style:none;max-width:68ch}
+ul.status li{
+  margin-bottom:10px;
+  padding-left:26px;
+  position:relative;
+}
+ul.status li::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:8px;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--teal);
+}
+ul.status li.pending::before{background:var(--amber)}
+
+/* ---------- banner ---------- */
+.banner{
+  background:var(--amber-bg);
+  border:1px solid #e6d3ac;
+  border-radius:4px;
+  padding:22px 26px;
+  margin:44px 0 8px;
+}
+.banner h4{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin:0 0 10px;
+  font-weight:500;
+}
+.banner p{margin:0;color:#4a3c1d;max-width:64ch}
+.banner p+p{margin-top:10px}
+
+/* ---------- footer ---------- */
+footer{
+  border-top:1px solid var(--rule);
+  margin-top:60px;
+  padding:30px 0 70px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--mute);
+  line-height:1.9;
+}
+footer a{color:var(--mute)}
+
+/* ---------- mobile ---------- */
+@media (max-width:720px){
+  body{font-size:16.5px}
+  .hero{padding:48px 0 32px}
+  .block{grid-template-columns:1fr;gap:0}
+  .block > .tag{
+    border-top:none;
+    border-left:2px solid var(--rule);
+    padding:0 0 0 10px;
+    margin:0 0 10px;
+  }
+  .block.verified > .tag{border-left-color:var(--teal)}
+  .block.open > .tag{border-left-color:var(--amber)}
+  .block.call > .tag{border-left-color:var(--ink)}
+  .key dl{grid-template-columns:1fr;gap:3px}
+  .key dd{margin-bottom:10px}
+  pre.code-block{font-size:12.5px;padding:12px 14px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow rise">Home AI Lab &middot; Implementation notes &middot; 24 August 2026</p>
+  <h1 class="rise">Getting RDP through Cloudflare</h1>
+  <p class="standfirst rise">The inference machine needed graphical Windows access for debugging work, without forwarding a port on a network the lab doesn't control. This note documents the Cloudflare Tunnel and Windows changes made to carry RDP alongside the existing SSH and Open WebUI traffic, the Browser RDP application built on top of it, and the point where a working session still hasn't been produced.</p>
+  <p class="meta rise">
+    <span>Status: in progress</span>
+    <span>Browser RDP not yet working</span>
+    <span>Read time ~4 min</span>
+  </p>
+</header>
+
+<main>
+
+<div class="key">
+  <h4>How to read the margin</h4>
+  <dl>
+    <dt class="k-verified">Verified</dt>
+    <dd>Confirmed by direct output, not assumed.</dd>
+    <dt class="k-open">Open</dt>
+    <dd>A working hypothesis or a queued check. Not yet established.</dd>
+    <dt class="k-call">Judgement</dt>
+    <dd>A choice made deliberately, where a different setup could reasonably choose otherwise.</dd>
+  </dl>
+</div>
+
+<h2>Goal</h2>
+
+<p>The inference machine (<code>ai-lab-b</code>) already has SSH access for debugging work, routed through a Cloudflare Tunnel to avoid forwarding ports on a network outside the lab's control. Graphical access was the next ask &mdash; RDP, not just a terminal &mdash; for a collaborator doing debugging work who needed the actual Windows desktop, not a shell.</p>
+
+<p>Forwarding TCP 3389 through the router was the obvious first idea and the first thing ruled out, for the same reason SSH doesn't use it: the network isn't under the lab's control. The existing tunnel, already carrying SSH (<code>ssh.skyapt.org</code>) and Open WebUI (<code>lab.skyapt.org</code>) traffic, looked like the natural place to add a third route.</p>
+
+<h2>Extending the existing tunnel</h2>
+
+<p>Before touching the Cloudflare Tunnel config, the working file was backed up (alongside an older backup from when SSH was first added). The ingress list going in was:</p>
+
+<pre class="code-block"><code>ingress:
+  - hostname: lab.skyapt.org
+    service: http://localhost:8080
+  - hostname: ssh.skyapt.org
+    service: ssh://localhost:22
+  - service: http_status:404</code></pre>
+
+<p>A third rule was added for RDP:</p>
+
+<pre class="code-block"><code>  - hostname: rdp.skyapt.org
+    service: rdp://localhost:3389</code></pre>
+
+<p>Validated cleanly (<code>cloudflared tunnel ingress validate</code> &rarr; <code>OK</code>), a DNS route was created for the new hostname, and the <code>cloudflared</code> service was restarted.</p>
+
+<div class="block verified">
+  <div class="tag">Verified</div>
+  <div class="content">
+    <p>Open WebUI, reachable via the same tunnel, was confirmed still working from a phone after the restart &mdash; the existing routes weren't disturbed by adding the third.</p>
+  </div>
+</div>
+
+<h2>Enabling RDP on Windows</h2>
+
+<p>RDP was off by default on <code>ai-lab-b</code> (<code>fDenyTSConnections</code> registry value of <code>1</code>). Flipped to <code>0</code>, confirmed Windows was then listening on port 3389 on both interfaces, and enabled the built-in <strong>Remote Desktop</strong> Windows Firewall rule group &mdash; the shadow, user-mode TCP, and user-mode UDP inbound rules all came up allowed.</p>
+
+<h2>Building the Browser RDP application</h2>
+
+<p>Cloudflare Zero Trust's Browser RDP wizard was used to create an application pointed at the new <code>rdp.skyapt.org</code> hostname on port 3389. An access policy was set up restricted to a single allow-listed collaborator address, with browser clipboard text copy/paste enabled and file upload/download left off.</p>
+
+<p>The wizard's target initially pointed at <code>127.0.0.1</code>, which was wrong for a tunnel proxying traffic to the machine's own LAN address &mdash; corrected to the machine's actual LAN IP. A separate Cloudflare private-network route (a /32 CIDR pointed at the same address, through the same tunnel) was also created alongside it.</p>
+
+<div class="block call">
+  <div class="tag">Judgement</div>
+  <div class="content">
+    <p>Both the public-hostname target and the private-network CIDR route were left in place rather than picking one, since it wasn't yet clear which one Cloudflare's Browser RDP implementation actually depends on &mdash; see below.</p>
+  </div>
+</div>
+
+<h2>Where it stopped</h2>
+
+<p>Browsing directly to the public hostname returned an error: no RDP target specified, select one from the App Launcher. Investigating that led into Cloudflare's Access App Launcher &mdash; enabling "show in App Launcher" on the application, adding a launcher-specific access policy &mdash; without producing a working session. The App Launcher kept reporting it needed to be enabled at the organization level.</p>
+
+<div class="block open">
+  <div class="tag">Open</div>
+  <div class="content">
+    <p>Best guess, not confirmed: Cloudflare's Browser RDP may treat a public-hostname route and a private-network/CIDR route as two different architectures, and this configuration may have mixed pieces of both without realizing it. Current Cloudflare documentation describes Browser RDP as available on free/Zero Trust tiers, so a plan limitation looks unlikely &mdash; but that's also not independently confirmed.</p>
+  </div>
+</div>
+
+<p>Rather than keep changing settings against an unclear architecture, further changes stopped here deliberately.</p>
+
+<h2>Current state</h2>
+
+<ul class="status">
+  <li>Open WebUI via the existing tunnel hostname: still working</li>
+  <li>Existing SSH route: unchanged</li>
+  <li>New RDP hostname: DNS and tunnel ingress exist, validate cleanly</li>
+  <li>Windows RDP: enabled, listening, firewall rules on</li>
+  <li>Browser RDP application: exists, access policy in place for the one collaborator</li>
+  <li>Target and a matching private-network route both point at the machine's LAN address</li>
+  <li class="pending">Browser RDP session: not yet working</li>
+</ul>
+
+<div class="banner">
+  <h4>Current status</h4>
+  <p>A backup of the pre-change tunnel config exists, so any of today's additions can be rolled back cleanly. Nothing here should be read as final architecture.</p>
+  <p>Next step is a review against Cloudflare's current Browser RDP documentation, to decide whether the public-hostname route is sufficient on its own or whether the private-network/CIDR pieces are actually required &mdash; before making further changes.</p>
+</div>
+
+</main>
+
+<footer>
+  <div>Home AI Lab &mdash; implementation notes, 24 August 2026</div>
+  <div>Diagrams and findings from an ongoing personal project on local model deployment.</div>
+  <div>Claims marked <span class="k-open">Open</span> are not yet established and should not be cited as findings.</div>
+  <div><a href="index.html">All Bench Notes</a> &middot; <a href="../index.html">AI Lab Portal Home</a></div>
+</footer>
+
+</div>
+</body>
+</html>
