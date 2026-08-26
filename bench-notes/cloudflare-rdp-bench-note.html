@@ -120,6 +120,33 @@ code{
   padding:1px 5px;
 }
 
+/* ---------- figures ---------- */
+figure{
+  margin:38px 0;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:22px 22px 16px;
+}
+figure img{display:block;width:100%;height:auto}
+figcaption{
+  font-size:14.5px;
+  color:var(--slate);
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid var(--rule);
+}
+figcaption b{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--mute);
+  font-weight:500;
+  display:block;
+  margin-bottom:5px;
+}
+
 /* ---------- code block ---------- */
 pre.code-block{
   font-family:var(--mono);
@@ -258,6 +285,7 @@ footer a{color:var(--mute)}
   .key dl{grid-template-columns:1fr;gap:3px}
   .key dd{margin-bottom:10px}
   pre.code-block{font-size:12.5px;padding:12px 14px}
+  figure{padding:14px 14px 12px}
 }
 </style>
 </head>
@@ -268,7 +296,7 @@ footer a{color:var(--mute)}
 <header class="hero">
   <p class="eyebrow rise">Home AI Lab &middot; Implementation notes &middot; 24 August 2026 &middot; updated 26 August 2026</p>
   <h1 class="rise">Getting RDP through Cloudflare</h1>
-  <p class="standfirst rise">The inference machine needed graphical Windows access for debugging work, without forwarding a port on a network the lab doesn't control. This note documents the Cloudflare Tunnel and Windows changes made to carry RDP alongside the existing SSH and Open WebUI traffic, the Browser RDP application built on top of it, and the point where a working session still hadn't been produced &mdash; plus a 26 August update covering the different route that actually worked.</p>
+  <p class="standfirst rise">The inference machine on AI-LAB-B needed to support graphical Windows access for debugging work, without forwarding a port on a network the lab doesn't control. This note documents the Cloudflare Tunnel and Windows changes made to carry RDP alongside the existing SSH and Open WebUI traffic, the Browser RDP application built on top of it, and the point where a working session still hadn't been produced &mdash; plus a 26 August update covering the different route that actually worked.</p>
   <p class="meta rise">
     <span>Status: working (see update)</span>
     <span>Browser RDP path still unresolved</span>
