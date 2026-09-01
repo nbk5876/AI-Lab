@@ -39,8 +39,8 @@ patterns above.
 
 ## Status
 
-Scaffolding only as of 2026-08-30 (Jeff / CC1) -- `.gitignore` and this
-README, no script content yet. The actual files are added and maintained by
-Debbie (CC2), who edits them directly on ai-lab-b. First real commit adding
-the five scripts above should be reviewed (diff check for secrets/runtime
-files) before push.
+Superseded as of 2026-09-01. This scaffolding (`.gitignore` and this
+README only, no script content was ever added here) has moved to a
+private operational repository, kept separate from this public repo since
+that code sits next to a bot token and a webhook URL. No name or path
+given here by design -- this repo is public.
