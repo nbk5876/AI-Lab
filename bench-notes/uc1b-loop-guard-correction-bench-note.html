@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UC1b Loop-Guard Correction — Home AI Lab</title>
+<meta name="description" content="A shared Discord bot for programmatic messaging was rejected by the lab's redesigned receive-side loop guard because it didn't fit a strict one-identity-one-participant model. The fix, and the live end-to-end test that confirmed it.">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicons/favicon-16x16.png">
+<link rel="shortcut icon" href="../favicons/favicon.ico">
+<link rel="manifest" href="../favicons/site.webmanifest">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--ink:#18202a;--muted:#657180;--line:#dfe4ea;--accent:#5b3f91;--good:#176b45;--code:#111820}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{background:linear-gradient(135deg,#27223b,#5b3f91);color:white;padding:48px 22px} .wrap{max-width:1050px;margin:auto}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;opacity:.8} h1{margin:.25rem 0 .5rem;font-size:clamp(2rem,5vw,3.5rem);line-height:1.08}
+.subtitle{max-width:800px;font-size:1.08rem;opacity:.9} main{padding:26px 18px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;margin:18px 0;box-shadow:0 3px 14px rgba(0,0,0,.04)}
+h2{margin-top:0} .status{display:inline-block;background:#e8f6ef;color:var(--good);border:1px solid #b8dfcc;font-weight:700;border-radius:999px;padding:5px 11px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px} .metric{border:1px solid var(--line);border-radius:10px;padding:14px}
+.metric b{display:block;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em} .metric span{display:block;margin-top:4px;font-weight:650;overflow-wrap:anywhere}
+li{margin:.45rem 0} code{background:#eef0f3;padding:.1em .35em;border-radius:4px} pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--code);color:#e8edf2;padding:20px;border-radius:10px;font:13px/1.48 Consolas,"Courier New",monospace}
+.note{color:var(--muted)}
+footer{color:var(--muted);text-align:center;padding:24px 18px 40px;font-size:.9rem}
+footer a{color:var(--accent)}
+</style></head><body>
+<header><div class="wrap"><div class="eyebrow">AI Lab · LabChan · Tracker Row 13</div><h1>UC1b Loop-Guard Correction</h1>
+<div class="subtitle">Correction of the shared Discord TX-bot authorization problem discovered during UC1b attempt #1, followed by a successful end-to-end live retest.</div></div></header>
+<main class="wrap">
+<section class="card"><span class="status">UC1b Attempt #2 — PASS</span><h2>Result</h2>
+<p>The shared <strong>LabChan TX</strong> bot can now carry an explicitly authorized LabChan <code>From:</code> participant through the redesigned RX loop guard. The new live test was accepted, archived once, and invoked CC1 exactly once.</p>
+<div class="grid"><div class="metric"><b>Commit</b><span>8898f1c</span></div><div class="metric"><b>Discord message</b><span>1545086439350337547</span></div>
+<div class="metric"><b>Automated tests</b><span>63 passed in 0.83s</span></div><div class="metric"><b>RX status</b><span>accepted</span></div>
+<div class="metric"><b>Archive</b><span>Exactly 1 entry</span></div><div class="metric"><b>Invocation</b><span>CC1 exactly once</span></div></div></section>
+
+<section class="card"><h2>Why the correction was needed</h2>
+<p>UC1b attempt #1 successfully transmitted through the shared Discord TX bot, but RX rejected the message because the bot's Discord author identity was not a normal 1:1 participant identity. The correction adds an explicit, default-deny authorization path for approved shared transport identities without weakening the existing participant identity checks.</p></section>
+
+<section class="card"><h2>Implemented correction</h2><ol>
+<li><code>contract/registry.md</code> gained an <strong>Authorized Transport Identities</strong> section under explicit-change governance.</li>
+<li>The shared LabChan TX bot's Discord transport identity was authorized initially to send on behalf of the human operator.</li>
+<li>RX now distinguishes a registered participant identity from an approved shared transport identity.</li>
+<li>A shared transport is accepted only when its LabChan <code>From:</code> value appears on that transport's allow-list.</li>
+<li>Unauthorized originators receive <code>loop_guard_unauthorized_transport_originator</code>; unknown identities remain <code>loop_guard_unmapped</code>.</li>
+<li>The authorization table is parsed by the listener and supplied to the RX processor at startup.</li></ol></section>
+
+<section class="card"><h2>Validation</h2>
+<p>CC1 added coverage for the authorization-table parser and for authorized, unauthorized, unknown, and no-authorization transport cases. The full suite completed with <strong>63 passed in 0.83s</strong>.</p>
+<p>CC1 then stopped the old listener, verified that no stale listener remained, restarted RX with the corrected code, confirmed a single listener instance, reviewed the scoped diff, committed and pushed the change, and ran a fresh UC1b attempt.</p></section>
+
+<section class="card"><h2>Live UC1b Attempt #2</h2>
+<p>The fresh TX message was posted by the shared TX bot, matched the new authorization entry, and passed the RX loop guard. The Discord message was accepted; the archive contained exactly one entry, CC1 was invoked exactly once, and the watermark advanced.</p>
+<p><strong>Conclusion:</strong> the TX → Discord → corrected RX → CC1 path worked end to end. Attempt #1 remains preserved as FAIL evidence; attempt #2 is the successful validation.</p></section>
+
+<section class="card"><h2>Repository and evidence</h2>
+<p>The correction was pushed as commit <code>8898f1c</code>, with evidence and a full report preserved in the lab's private operations repository.</p></section>
+</main>
+<footer>
+  <div>Home AI Lab · LabChan TX/RX redesign, 3 September 2026</div>
+  <div><a href="index.html">All Bench Notes</a> &middot; <a href="../index.html">AI Lab Portal Home</a></div>
+</footer>
+</body></html>

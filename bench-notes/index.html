@@ -37,6 +37,12 @@
   <p>Longer-form than the Engineering Notebook, more self-contained than a Build Journal entry — each Bench Note tackles one specific problem end to end: the setup, what was tried, what was measured, and what's still open. Each note is its own standalone page with its own visual style, since the subject matter varies more than a shared template can comfortably hold.</p>
 
   <div class="timeline-entry">
+    <div class="timeline-date">September 3, 2026</div>
+    <h2><a href="uc1b-loop-guard-correction-bench-note.html">UC1b Loop-Guard Correction</a></h2>
+    <p>A shared Discord bot for programmatic LabChan messages was rejected by the redesigned receive-side loop guard, because it didn't fit the strict one-identity-one-participant model everything else used. The fix &mdash; an explicit, default-deny authorization list for shared transport identities &mdash; and the live end-to-end test that confirmed it.</p>
+  </div>
+
+  <div class="timeline-entry">
     <div class="timeline-date">August 24, 2026 &mdash; updated August 26</div>
     <h2><a href="cloudflare-rdp-bench-note.html">Getting RDP Through Cloudflare</a></h2>
     <p>Routing Remote Desktop access to the inference machine through the lab's existing Cloudflare Tunnel instead of forwarding a router port &mdash; the tunnel and Windows changes made, the Browser RDP application that stalled, and the different Cloudflare mechanism (a local client-side bridge) that ended up actually working.</p>
